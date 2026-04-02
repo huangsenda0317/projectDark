@@ -1,0 +1,6 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1775120979
+::res://scenes/::1775120829
+main.tscn::PackedScene::9190856015609163101::1775120829::0::1::::<><>::res://scripts/tetris_game.gd
+::res://scripts/::1775120849
+tetris_game.gd::GDScript::-1::1775120858::0::1::::<>Control<>::

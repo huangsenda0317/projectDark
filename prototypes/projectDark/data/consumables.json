@@ -1,0 +1,16 @@
+{
+	"consumables": [
+		{"id": "C01", "name": "小型生命药剂", "rarity": "common", "max_stack": 5, "usable_in": "both", "effect_ref": "heal_hp_25"},
+		{"id": "C02", "name": "大型生命药剂", "rarity": "rare", "max_stack": 3, "usable_in": "both", "effect_ref": "heal_hp_50"},
+		{"id": "C03", "name": "魔力小瓶", "rarity": "common", "max_stack": 5, "usable_in": "both", "effect_ref": "restore_mp_30"},
+		{"id": "C04", "name": "魔力灯笼", "rarity": "rare", "max_stack": 2, "usable_in": "combat_only", "effect_ref": "restore_full_mp"},
+		{"id": "C05", "name": "前进卷轴·短", "rarity": "common", "max_stack": 4, "usable_in": "board_only", "effect_ref": "forward_d3"},
+		{"id": "C06", "name": "前进卷轴·远", "rarity": "rare", "max_stack": 2, "usable_in": "board_only", "effect_ref": "forward_4_6"},
+		{"id": "C07", "name": "后退护符", "rarity": "common", "max_stack": 4, "usable_in": "board_only", "effect_ref": "back_2_5"},
+		{"id": "C08", "name": "双骰护符", "rarity": "rare", "max_stack": 2, "usable_in": "board_only", "effect_ref": "double_dice_high"},
+		{"id": "C09", "name": "定数沙漏·3", "rarity": "rare", "max_stack": 3, "usable_in": "board_only", "effect_ref": "fixed_steps_3"},
+		{"id": "C10", "name": "定数沙漏·6", "rarity": "epic", "max_stack": 2, "usable_in": "board_only", "effect_ref": "fixed_steps_6"},
+		{"id": "C11", "name": "破雾熏香", "rarity": "rare", "max_stack": 2, "usable_in": "board_only", "effect_ref": "reveal_layer_icons"},
+		{"id": "C12", "name": "真视熏香", "rarity": "epic", "max_stack": 1, "usable_in": "board_only", "effect_ref": "reveal_layer_icons"}
+	]
+}

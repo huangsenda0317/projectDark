@@ -1,0 +1,10 @@
+{
+	"equipment": [
+		{"id": "W01", "slot": "weapon", "name": "断罪残刃", "rarity": "common", "attack_flat": 2, "attack_mult": 0.1},
+		{"id": "W02", "name": "异端短斧", "slot": "weapon", "rarity": "rare", "attack_flat": 4, "attack_mult": 0.15, "tag_church_bonus": 0.1},
+		{"id": "A01", "name": "朝圣破衣", "slot": "armor", "rarity": "common", "armor_flat": 5},
+		{"id": "A02", "name": "烙铁胸甲", "slot": "armor", "rarity": "rare", "armor_flat": 12, "holy_resist": 0.1},
+		{"id": "T01", "name": "灌铅骰子", "slot": "trinket", "rarity": "rare", "armor_flat": 0},
+		{"id": "T02", "name": "商人之铃", "slot": "trinket", "rarity": "rare", "armor_flat": 0, "shop_discount": 0.15}
+	]
+}

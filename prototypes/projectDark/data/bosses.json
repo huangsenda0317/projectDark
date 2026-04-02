@@ -1,0 +1,45 @@
+{
+	"bosses": [
+		{
+			"id": "B04",
+			"name": "执火祭司",
+			"floor": 4,
+			"hp": 110,
+			"attack": 11,
+			"armor": 2,
+			"tag": "church",
+			"pattern": "aoe_every_3",
+			"aoe_damage": 7,
+			"gold_reward": 35,
+			"shards_reward": 8
+		},
+		{
+			"id": "B07",
+			"name": "连环审判官",
+			"floor": 7,
+			"hp": 145,
+			"attack": 13,
+			"armor": 4,
+			"tag": "church",
+			"pattern": "exposure_bonus",
+			"exposure_thresh": 5,
+			"bonus_damage": 6,
+			"gold_reward": 45,
+			"shards_reward": 12
+		},
+		{
+			"id": "B10",
+			"name": "苦修巨像·雏形",
+			"floor": 10,
+			"hp": 190,
+			"attack": 14,
+			"armor": 10,
+			"tag": "golem",
+			"pattern": "two_phase",
+			"phase_hp_pct": 0.55,
+			"phase2_atk_bonus": 5,
+			"gold_reward": 80,
+			"shards_reward": 20
+		}
+	]
+}

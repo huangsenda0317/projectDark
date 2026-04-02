@@ -1,0 +1,27 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="ProjectDark"
+config/description="黑暗之塔 · 垂直切片原型"
+run/main_scene="res://scenes/main_menu.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+
+[autoload]
+
+DataDB="*res://scripts/data_db.gd"
+RunState="*res://scripts/run_state.gd"
+
+[display]
+
+window/size/viewport_width=960
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"

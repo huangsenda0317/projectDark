@@ -1,0 +1,30 @@
+{
+	"events": [
+		{"event_id": "EV01", "name": "什一税箱", "category": "resource", "tag": "好", "weight_act1": 12, "min_floor": 1, "max_floor": 10, "effect_ref": "gold_gain", "params": {"base": 6, "per_floor": 2}},
+		{"event_id": "EV02", "name": "异端残卷", "category": "resource", "tag": "好", "weight_act1": 10, "min_floor": 1, "max_floor": 10, "effect_ref": "exp_or_stat", "params": {"exp": 4, "hp_bonus": 8, "atk_bonus": 2}},
+		{"event_id": "EV03", "name": "魂屑堆", "category": "resource", "tag": "好", "weight_act1": 8, "min_floor": 1, "max_floor": 10, "effect_ref": "shards_gain", "params": {"n": 5}},
+		{"event_id": "EV04", "name": "流浪商贩帐篷", "category": "resource", "tag": "中性", "weight_act1": 6, "min_floor": 1, "max_floor": 10, "effect_ref": "open_shop"},
+		{"event_id": "EV05", "name": "圣餐残羹", "category": "resource", "tag": "好", "weight_act1": 10, "min_floor": 1, "max_floor": 10, "effect_ref": "heal_pct", "params": {"act1": 0.15, "act3": 0.1}},
+		{"event_id": "EV06", "name": "祝福烛台", "category": "resource", "tag": "好", "weight_act1": 8, "min_floor": 1, "max_floor": 10, "effect_ref": "next_combat_armor", "params": {"bonus": 5}},
+		{"event_id": "EV07", "name": "恶魔低语", "category": "resource", "tag": "中性", "weight_act1": 4, "min_floor": 1, "max_floor": 10, "effect_ref": "devil_trade", "params": {"hp_pct": 0.05}},
+		{"event_id": "EV08", "name": "再动圣铃", "category": "movement", "tag": "好", "weight_act1": 5, "min_floor": 1, "max_floor": 10, "effect_ref": "grant_extra_moves", "params": {"n": 1}},
+		{"event_id": "EV09", "name": "朝圣道塌方", "category": "movement", "tag": "坏", "weight_act1": 6, "min_floor": 1, "max_floor": 10, "effect_ref": "forced_forward", "params": {"dice": "d3"}},
+		{"event_id": "EV10", "name": "回头岸石碑", "category": "movement", "tag": "中性", "weight_act1": 5, "min_floor": 1, "max_floor": 10, "effect_ref": "back_and_heal", "params": {"steps": 4, "heal_pct": 0.12}},
+		{"event_id": "EV11", "name": "迷途雾门", "category": "movement", "tag": "中性", "weight_act1": 4, "min_floor": 1, "max_floor": 10, "effect_ref": "teleport_revealed"},
+		{"event_id": "EV12", "name": "深渊竖井", "category": "floor", "tag": "楼层改变", "weight_act1": 3, "min_floor": 1, "max_floor": 10, "effect_ref": "pit_slice", "params": {"dmg_pct": 0.1, "gold": 12, "shards": 4}},
+		{"event_id": "EV13", "name": "隐秘血梯", "category": "floor", "tag": "楼层改变", "weight_act1": 2, "min_floor": 1, "max_floor": 10, "pool": false, "effect_ref": "hidden_stairs_combat"},
+		{"event_id": "EV15", "name": "正式楼梯口", "category": "floor", "tag": "好", "weight_act1": 0, "min_floor": 1, "max_floor": 10, "pool": false, "effect_ref": "stairs_prompt"},
+		{"event_id": "EV16", "name": "落石陷阱", "category": "harm", "tag": "坏", "weight_act1": 8, "min_floor": 1, "max_floor": 10, "effect_ref": "trap_physical", "params": {"low": 8, "high": 18}},
+		{"event_id": "EV17", "name": "圣水灼伤", "category": "harm", "tag": "坏", "weight_act1": 7, "min_floor": 1, "max_floor": 10, "effect_ref": "trap_holy", "params": {"base": 10}},
+		{"event_id": "EV18", "name": "精神侵蚀", "category": "harm", "tag": "坏", "weight_act1": 6, "min_floor": 1, "max_floor": 10, "effect_ref": "mp_drain", "params": {"mp": 15}},
+		{"event_id": "EV19", "name": "告解室", "category": "harm", "tag": "中性", "weight_act1": 5, "min_floor": 1, "max_floor": 10, "effect_ref": "confession", "params": {"hp_pct": 0.08, "exposure_delta": -10}},
+		{"event_id": "EV20", "name": "肃清钟鸣", "category": "harm", "tag": "坏", "weight_act1": 4, "min_floor": 1, "max_floor": 10, "effect_ref": "exposure_up", "params": {"n": 3}},
+		{"event_id": "EV21", "name": "救助溃兵", "category": "choice", "tag": "中性", "weight_act1": 6, "min_floor": 1, "max_floor": 10, "effect_ref": "choice_ab", "params": {"a": "potions", "b": "shop_discount"}},
+		{"event_id": "EV24", "name": "镜像池", "category": "special", "tag": "中性", "weight_act1": 2, "min_floor": 1, "max_floor": 10, "effect_ref": "mirror_last"},
+		{"event_id": "EV27", "name": "审判官足迹", "category": "special", "tag": "坏", "weight_act1": 4, "min_floor": 1, "max_floor": 10, "effect_ref": "combat_minion"},
+		{"event_id": "EV28", "name": "时砂流沙", "category": "special", "tag": "中性", "weight_act1": 2, "min_floor": 1, "max_floor": 10, "requires_meta": true, "effect_ref": "time_sand", "params": {"add": 3}},
+		{"event_id": "PH01", "name": "散落的铜币", "category": "resource", "tag": "好", "weight_act1": 8, "min_floor": 1, "max_floor": 10, "effect_ref": "gold_gain", "params": {"base": 10, "per_floor": 0}},
+		{"event_id": "PH02", "name": "尖刺地板", "category": "harm", "tag": "坏", "weight_act1": 7, "min_floor": 1, "max_floor": 10, "effect_ref": "trap_physical", "params": {"low": 5, "high": 12}},
+		{"event_id": "PH03", "name": "焦痕墙洞", "category": "resource", "tag": "中性", "weight_act1": 5, "min_floor": 1, "max_floor": 10, "effect_ref": "shards_gain", "params": {"n": 3}}
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"enemies": [
+		{
+			"id": "E27",
+			"name": "审判追猎者",
+			"hp": 42,
+			"attack": 9,
+			"armor": 1,
+			"tag": "church",
+			"gold_reward": 12,
+			"shards_reward": 3
+		}
+	]
+}

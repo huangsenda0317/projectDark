@@ -1,0 +1,7 @@
+{
+	"spells": [
+		{"id": "S01", "name": "火刑反噬", "mp_cost": 15, "cooldown": 2, "effect_ref": "holy_bolt", "params": {"mult": 1.2}},
+		{"id": "S02", "name": "雾行", "mp_cost": 10, "cooldown": 3, "effect_ref": "board_extra_moves", "params": {"n": 2}},
+		{"id": "S03", "name": "告解盾", "mp_cost": 20, "cooldown": 3, "effect_ref": "shield_barrier", "params": {"shield_pct": 0.1}}
+	]
+}
