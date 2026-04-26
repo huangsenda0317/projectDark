@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-parchment text-text-black font-sans;
+    margin: 0;
+    min-height: 100vh;
+    overflow-y: auto;
+  }
+
+  #root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@layer components {
+  .pixel-border {
+    border: 2px solid #1E3932;
+    box-shadow: 4px 4px 0px #1E3932;
+    image-rendering: pixelated;
+  }
+
+  .pixel-text-shadow {
+    text-shadow: 1px 1px 0px #1E3932;
+  }
+
+  .scroll-paper {
+    background: linear-gradient(180deg, #faf6ee 0%, #f2f0eb 100%);
+    border: 3px double #cba258;
+    border-radius: 12px;
+  }
+
+  .metal-border {
+    border: 2px solid #cba258;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.3),
+      0 2px 4px rgba(0,0,0,0.2);
+  }
+}

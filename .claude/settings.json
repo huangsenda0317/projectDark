@@ -1,0 +1,50 @@
+{
+  "projectName": "Circle of Faith",
+  "statusLine": {
+    "script": ".claude/statusline.sh"
+  },
+  "permissions": {
+    "allowed": [
+      "git status",
+      "git log",
+      "git diff",
+      "git branch",
+      "git stash list",
+      "npm test",
+      "pytest",
+      "godot --headless --quit",
+      "bash .claude/hooks/*.sh"
+    ],
+    "blocked": [
+      "git push --force",
+      "git reset --hard",
+      "git rebase -i",
+      "rm -rf",
+      "rm -rf /",
+      "rm -rf ~",
+      "cat .env",
+      "cat credentials*",
+      "cat *secret*"
+    ]
+  },
+  "hooks": {
+    "validateCommit": ".claude/hooks/validate-commit.sh",
+    "validatePush": ".claude/hooks/validate-push.sh",
+    "validateAssets": ".claude/hooks/validate-assets.sh",
+    "sessionStart": ".claude/hooks/session-start.sh",
+    "sessionStop": ".claude/hooks/session-stop.sh",
+    "detectGaps": ".claude/hooks/detect-gaps.sh",
+    "preCompact": ".claude/hooks/pre-compact.sh",
+    "logAgent": ".claude/hooks/log-agent.sh"
+  },
+  "agentDefaults": {
+    "model": "claude-sonnet-4-6",
+    "maxTokens": 4096,
+    "temperature": 0.7
+  },
+  "safety": {
+    "requireApprovalForWrites": true,
+    "requireApprovalForDestructiveGitOps": true,
+    "autoAllowSafeReads": true
+  }
+}
