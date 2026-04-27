@@ -1,0 +1,50 @@
+{
+  "projectName": "Circle of Faith",
+  "statusLine": {
+    "script": ".claude/statusline.sh"
+  },
+  "permissions": {
+    "allowed": [
+      { "command": "git status" },
+      { "command": "git log" },
+      { "command": "git diff" },
+      { "command": "git branch" },
+      { "command": "git stash list" },
+      { "command": "npm test" },
+      { "command": "pytest" },
+      { "command": "godot --headless --quit" },
+      { "command": "bash .claude/hooks/*.sh" }
+    ],
+    "blocked": [
+      { "command": "git push --force" },
+      { "command": "git reset --hard" },
+      { "command": "git rebase -i" },
+      { "command": "rm -rf" },
+      { "command": "rm -rf /" },
+      { "command": "rm -rf ~" },
+      { "command": "cat .env" },
+      { "command": "cat credentials*" },
+      { "command": "cat *secret*" }
+    ]
+  },
+  "hooks": {
+    "validateCommit": ".claude/hooks/validate-commit.sh",
+    "validatePush": ".claude/hooks/validate-push.sh",
+    "validateAssets": ".claude/hooks/validate-assets.sh",
+    "sessionStart": ".claude/hooks/session-start.sh",
+    "sessionStop": ".claude/hooks/session-stop.sh",
+    "detectGaps": ".claude/hooks/detect-gaps.sh",
+    "preCompact": ".claude/hooks/pre-compact.sh",
+    "logAgent": ".claude/hooks/log-agent.sh"
+  },
+  "agentDefaults": {
+    "model": "claude-sonnet-4-6",
+    "maxTokens": 4096,
+    "temperature": 0.7
+  },
+  "safety": {
+    "requireApprovalForWrites": true,
+    "requireApprovalForDestructiveGitOps": true,
+    "autoAllowSafeReads": true
+  }
+}
