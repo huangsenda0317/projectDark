@@ -16,6 +16,7 @@ function rollDie(faces: number): number {
  * |------|--------|
  * | STR (每5点) | flatBonus Z +1 |
  * | INT (每5点) | diceFaces Y +1 |
+ * | AGI (每8点) | battle dice pool +1 (handled in weapons.ts) |
  * | AGI (每10点) | critChance C +1% |
  * | FAI (每3点) | diceCount X +1 (max +3) |
  */

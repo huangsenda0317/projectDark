@@ -1,4 +1,4 @@
-import type { EquipmentItem, EquipmentSet, EquipmentSlot } from '../types/game';
+import type { EquipmentItem, EquipmentSet, DiceRequirement } from '../types/game';
 
 interface SetBonus {
   pieces: number;
@@ -21,7 +21,7 @@ export const EQUIPMENT_SETS: Record<string, EquipmentSetData> = {
     totalWeight: 22,
     bonuses: [
       { pieces: 2, description: '每回合自动获得 4 点护甲' },
-      { pieces: 4, description: '解锁「神圣冲锋」：消耗 5 信仰，对所有敌人造成(力量×3)伤害' },
+      { pieces: 4, description: '解锁「神圣冲锋」：消耗 1 对子（两骰同值），造成(力量×3)群体伤害' },
       { pieces: 6, description: '受到致命伤害时 1 次免死，保留 1HP（每场战斗 1 次）' },
     ],
   },
@@ -32,7 +32,7 @@ export const EQUIPMENT_SETS: Record<string, EquipmentSetData> = {
     totalWeight: 6,
     bonuses: [
       { pieces: 2, description: '信仰值每满 5 点，自动回复 3HP' },
-      { pieces: 4, description: '解锁「神谕降临」：消耗 8 信仰，随机施加 3 个祝福状态并抽 2 张牌' },
+      { pieces: 4, description: '解锁「神谕降临」：消耗 3 骰总和≥12，群体祝福 + 回复 10HP' },
       { pieces: 6, description: '每次获得信仰值时，额外获得 1 点（永久被动）' },
     ],
   },
@@ -43,8 +43,8 @@ export const EQUIPMENT_SETS: Record<string, EquipmentSetData> = {
     totalWeight: 10,
     bonuses: [
       { pieces: 2, description: '信仰值越低，法术伤害越高（最多+80%）' },
-      { pieces: 4, description: '解锁「禁断仪式」：消耗 3 信仰（或等量 HP），召唤异端火焰持续灼烧敌人' },
-      { pieces: 6, description: '每次打出异端牌，额外造成 2 点穿透伤害' },
+      { pieces: 4, description: '解锁「禁断仪式」：消耗 1 顺子（三骰连续），群体灼烧 + (智力×2)伤害' },
+      { pieces: 6, description: '每次使用异端技能，额外造成 2 点穿透伤害' },
     ],
   },
   shadow: {
@@ -54,7 +54,7 @@ export const EQUIPMENT_SETS: Record<string, EquipmentSetData> = {
     totalWeight: 8,
     bonuses: [
       { pieces: 2, description: '闪避率+15%' },
-      { pieces: 4, description: '解锁「消影步」：本回合所有攻击无法被格挡，消耗 3AP' },
+      { pieces: 4, description: '解锁「消影步」：消耗 1 对子，本回合所有攻击无法被格挡' },
       { pieces: 6, description: '战斗开始时随机窃取敌人 1 个正面状态' },
     ],
   },
@@ -65,10 +65,31 @@ export const EQUIPMENT_SETS: Record<string, EquipmentSetData> = {
     totalWeight: 12,
     bonuses: [
       { pieces: 2, description: '每层开始随机获得 1 个消耗品' },
-      { pieces: 4, description: '解锁「实验爆炸」：将手中 1 张消耗品转化为对所有敌人的伤害' },
+      { pieces: 4, description: '解锁「实验爆炸」：消耗 1奇+1偶，将 1 个消耗品转化为群体伤害' },
       { pieces: 6, description: '消耗品效果翻倍' },
     ],
   },
+};
+
+/** Dice slot requirements for individual equipment pieces in combat */
+export const EQUIPMENT_DICE_SLOTS: Record<string, { requirement: DiceRequirement; effect: string }> = {
+  knight_weapon: { requirement: { type: 'threshold', value: 5, diceCost: 1, label: '≥5' }, effect: '3d8+5 伤害' },
+  knight_chest: { requirement: { type: 'threshold', value: 4, diceCost: 1, label: '≥4' }, effect: '+4 护甲（2回合）' },
+  knight_helm: { requirement: { type: 'threshold', value: 3, diceCost: 1, label: '≥3' }, effect: '+3 护盾' },
+  knight_shield: { requirement: { type: 'threshold', value: 3, diceCost: 1, label: '≥3' }, effect: '骰子点数×2 护盾' },
+  knight_boots: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '+2 护盾' },
+  knight_cloak: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '+1 护盾' },
+
+  friar_hood: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '回复骰子点数 HP' },
+  friar_robe: { requirement: { type: 'parity', value: 'even', diceCost: 1, label: '偶数' }, effect: '+2 信仰值' },
+  friar_staff: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '1d6+8 稳定伤害' },
+
+  shadow_mask: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '闪避率+20%（1回合）' },
+  shadow_dagger: { requirement: { type: 'any', diceCost: 1, label: '任意' }, effect: '2d4+1 高暴击' },
+
+  heretic_glove: { requirement: { type: 'threshold', value: 2, diceCost: 1, label: '≤2' }, effect: '灼烧敌人（骰子点数回合）' },
+
+  alchemist_goggle: { requirement: { type: 'threshold', value: 3, diceCost: 1, label: '≥3' }, effect: '显示敌人详细属性' },
 };
 
 export const EQUIPMENT_ITEMS: EquipmentItem[] = [

@@ -1,4 +1,4 @@
-/** Game type definitions for Circle of Faith */
+/** Game type definitions for Circle of Faith — Dice Allocation Combat */
 
 export type SceneType = 'board' | 'combat' | 'village' | 'interlude' | 'gameover';
 
@@ -39,6 +39,19 @@ export type RewardType = 'item' | 'equipment' | 'gold' | 'restore' | 'relic';
 
 export type Quality = 'common' | 'fine' | 'rare' | 'legendary';
 
+/** Dice requirement types for equipment slots */
+export type DiceRequirementType = 'any' | 'threshold' | 'parity' | 'pair' | 'straight' | 'sum';
+
+export interface DiceRequirement {
+  type: DiceRequirementType;
+  /** For threshold: minimum value. For parity: 'odd' | 'even'. For sum: target value. */
+  value?: number | string;
+  /** How many dice this slot consumes */
+  diceCost: number;
+  /** Human-readable label for UI */
+  label: string;
+}
+
 export interface Stats {
   str: number;
   agi: number;
@@ -55,11 +68,12 @@ export interface DamageFormula {
   variance: number;
 }
 
+/** A weapon has dice requirements to be activated in combat */
 export interface Weapon {
   id: string;
   name: string;
-  baseSpeed: number;
   formula: DamageFormula;
+  diceRequirement: DiceRequirement;
   weight: number;
   description: string;
   set: EquipmentSet;
@@ -92,20 +106,27 @@ export interface Cell {
   corrupted: boolean;
 }
 
-export interface CombatAction {
+/** A dice-activated slot in combat — can be an equipment piece or a basic action */
+export interface DiceSlot {
   id: string;
   name: string;
   type: 'attack' | 'skill' | 'item' | 'defend' | 'flee';
-  description: string;
+  diceRequirement: DiceRequirement;
   formula?: DamageFormula;
   block?: number;
   faithCost?: number;
-  faithGain?: number;
-  hpCost?: number;
   heal?: number;
   color: string;
   usesBoardDice?: boolean;
-  extraCooldown?: number;
+  description: string;
+}
+
+/** Represents a rolled battle die */
+export interface BattleDice {
+  index: number;
+  value: number;
+  allocated: boolean;
+  allocatedTo?: string; // slot ID
 }
 
 export interface RewardOption {
@@ -126,7 +147,6 @@ export interface Enemy {
   hp: number;
   maxHp: number;
   armor: number;
-  speed: number;
   intent: EnemyIntent;
   intentValue: number;
   damage: number;
@@ -201,17 +221,6 @@ export interface Villager {
   recruited: boolean;
   recruitFaith: number;
   specialty: string;
-}
-
-export interface ATBUnit {
-  id: string;
-  name: string;
-  gauge: number;
-  speed: number;
-  isPlayer: boolean;
-  isActing: boolean;
-  extraCooldown: number;
-  enemyRef?: Enemy;
 }
 
 export interface DamageResult {
