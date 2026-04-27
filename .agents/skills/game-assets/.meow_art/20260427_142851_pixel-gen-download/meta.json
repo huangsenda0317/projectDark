@@ -1,0 +1,39 @@
+{
+  "command": "pixel-gen-download",
+  "started_at": "2026-04-27T14:28:51",
+  "finished_at": "2026-04-27T14:28:58",
+  "run_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art/20260427_142851_pixel-gen-download",
+  "work_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art",
+  "effective_output_dir": "outputs/pixel_gen/A_fox_rogue_with_twin_daggers",
+  "request": {
+    "cli_args": {
+      "api_base": "https://api.meowart.ai",
+      "api_key": "ma_l...IkpQ",
+      "timeout": 240,
+      "max_wait": 900,
+      "poll_interval": 3.0,
+      "work_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art",
+      "output_dir": "./outputs/pixel_gen/A_fox_rogue_with_twin_daggers",
+      "no_download": false,
+      "insecure": false,
+      "command": "pixel-gen-download",
+      "api_job_id": "f4854cc2-0c20-48cb-baec-51a0a9aacc90",
+      "output_index": 0
+    },
+    "payload": {
+      "api_job_id": "f4854cc2-0c20-48cb-baec-51a0a9aacc90",
+      "output_dir": "./outputs/pixel_gen/A_fox_rogue_with_twin_daggers",
+      "output_index": 0
+    }
+  },
+  "response": {
+    "downloaded_path": "outputs/pixel_gen/A_fox_rogue_with_twin_daggers/f4854cc2-0c20-48cb-baec-51a0a9aacc90_output_0.png"
+  },
+  "downloads": [
+    {
+      "type": "explicit_download",
+      "path": "outputs/pixel_gen/A_fox_rogue_with_twin_daggers/f4854cc2-0c20-48cb-baec-51a0a9aacc90_output_0.png"
+    }
+  ],
+  "error": ""
+}

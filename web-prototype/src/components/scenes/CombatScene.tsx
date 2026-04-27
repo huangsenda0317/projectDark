@@ -1,9 +1,12 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { useCombatStore } from '../../stores/useCombatStore';
 import { ActionPanel } from '../ui/ActionPanel';
+import { RewardModal } from '../ui/RewardModal';
 import { PixelButton } from '../common/PixelButton';
 import { WEAPONS } from '../../data/weapons';
+import { generateRewards } from '../../services/rewardService';
+import type { RewardOption } from '../../types/game';
 
 const TICK_MS = 100;
 
@@ -27,6 +30,7 @@ export const CombatScene: React.FC = () => {
   const game = useGameStore();
   const combat = useCombatStore();
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [rewards, setRewards] = useState<RewardOption[] | null>(null);
 
   useEffect(() => {
     if (combat.units.length === 0) {
@@ -54,6 +58,23 @@ export const CombatScene: React.FC = () => {
   };
 
   const handleVictory = () => {
+    if (!rewards) {
+      const r = generateRewards(game.run.floor, false);
+      setRewards(r);
+      return;
+    }
+    combat.resetCombat();
+    setRewards(null);
+    if (game.run.floor >= 10) {
+      game.resetGame();
+      game.setScene('board');
+    } else {
+      game.setScene('interlude');
+    }
+  };
+
+  const handleRewardPick = () => {
+    setRewards(null);
     combat.resetCombat();
     if (game.run.floor >= 10) {
       game.resetGame();
@@ -264,8 +285,13 @@ export const CombatScene: React.FC = () => {
         </div>
       )}
 
+      {/* Reward Modal - shown after victory */}
+      {rewards && (
+        <RewardModal rewards={rewards} onClose={handleRewardPick} />
+      )}
+
       {/* Combat ended overlay */}
-      {combat.combatEnded && (
+      {combat.combatEnded && !rewards && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-parchment scroll-paper p-8 rounded-card text-center max-w-sm">
             {combat.victory ? (

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import type { PlayerState, RunProgress, VillageMeta, SceneType, EquipmentItem, Card } from '../types/game';
-import { STARTER_DECK } from '../data/cards';
+import type { PlayerState, RunProgress, VillageMeta, SceneType, EquipmentItem, Item, Relic } from '../types/game';
 
 interface GameState {
   currentScene: SceneType;
@@ -10,10 +9,12 @@ interface GameState {
   equipped: EquipmentItem[];
   backpack: EquipmentItem[];
   dimensionalPouch: EquipmentItem[];
-  deck: Card[];
+  items: Item[];
+  relics: Relic[];
+  showRewardModal: boolean;
+  pendingRewards: any[] | null;
   visitedInterlude: boolean;
 
-  // Actions
   setScene: (scene: SceneType) => void;
   updatePlayer: (partial: Partial<PlayerState>) => void;
   addGold: (amount: number) => void;
@@ -27,41 +28,33 @@ interface GameState {
   unequipItem: (itemId: string) => void;
   addToBackpack: (item: EquipmentItem) => void;
   addToDimensionalPouch: (item: EquipmentItem) => void;
-  addCardToDeck: (card: Card) => void;
-  removeCardFromDeck: (cardId: string) => void;
+  addItem: (item: Item) => void;
+  useItem: (itemId: string) => void;
+  addRelic: (relic: Relic) => void;
+  removeRelic: (relicId: string) => void;
   addFaithTag: (tag: string) => void;
   contributeToVillage: (gold: number, faith: number) => void;
   startNewRun: () => void;
   resetGame: () => void;
+  setShowRewardModal: (v: boolean) => void;
+  setPendingRewards: (r: any[] | null) => void;
 }
 
 const INITIAL_PLAYER: PlayerState = {
-  hp: 60,
-  maxHp: 60,
-  armor: 0,
+  hp: 60, maxHp: 60, armor: 0,
   stats: { str: 5, agi: 5, int: 5, con: 5, fai: 5 },
-  faith: 5,
-  maxFaith: 20,
-  gold: 50,
-  curseLevel: 0,
-  encumbrance: 0,
-  maxEncumbrance: 20, // base 10 + str*2
+  faith: 5, maxFaith: 20, gold: 50,
+  curseLevel: 0, encumbrance: 0,
+  maxEncumbrance: 20,
   faithTags: [],
 };
 
 const INITIAL_RUN: RunProgress = {
-  floor: 1,
-  maxFloor: 10,
-  diceHistory: [],
-  totalFloorsCleared: 0,
+  floor: 1, maxFloor: 10, diceHistory: [], totalFloorsCleared: 0,
 };
 
 const INITIAL_VILLAGE: VillageMeta = {
-  level: 1,
-  name: '晨星村',
-  population: 3,
-  taxPerRun: 5,
-  faithReserve: 0,
+  level: 1, name: '晨星村', population: 3, taxPerRun: 5, faithReserve: 0,
   buildings: [
     { id: 'house', name: '家', unlocked: true, built: true, costGold: 0, costFaith: 0, costResources: 0, effect: '基础住所' },
     { id: 'prayer', name: '祈祷场', unlocked: true, built: true, costGold: 0, costFaith: 0, costResources: 0, effect: 'Run开始时+1信仰' },
@@ -82,183 +75,98 @@ export const useGameStore = create<GameState>((set, get) => ({
   player: { ...INITIAL_PLAYER },
   run: { ...INITIAL_RUN },
   village: { ...INITIAL_VILLAGE },
-  equipped: [],
-  backpack: [],
-  dimensionalPouch: [],
-  deck: [...STARTER_DECK],
+  equipped: [], backpack: [], dimensionalPouch: [],
+  items: [], relics: [],
+  showRewardModal: false, pendingRewards: null,
   visitedInterlude: false,
 
   setScene: (scene) => set({ currentScene: scene }),
-
-  updatePlayer: (partial) =>
-    set((state) => ({
-      player: { ...state.player, ...partial },
-    })),
-
-  addGold: (amount) =>
-    set((state) => ({
-      player: { ...state.player, gold: Math.max(0, state.player.gold + amount) },
-    })),
-
-  addFaith: (amount) =>
-    set((state) => ({
-      player: {
-        ...state.player,
-        faith: Math.max(0, Math.min(state.player.maxFaith, state.player.faith + amount)),
-      },
-    })),
-
-  takeDamage: (amount) =>
-    set((state) => {
-      const armor = state.player.armor;
-      const damageThroughArmor = Math.max(0, amount - armor);
-      const newArmor = Math.max(0, armor - amount);
-      const newHp = Math.max(0, state.player.hp - damageThroughArmor);
-      return {
-        player: { ...state.player, hp: newHp, armor: newArmor },
-      };
-    }),
-
-  heal: (amount) =>
-    set((state) => ({
-      player: {
-        ...state.player,
-        hp: Math.min(state.player.maxHp, state.player.hp + amount),
-      },
-    })),
-
-  addCurse: (amount) =>
-    set((state) => ({
-      player: { ...state.player, curseLevel: state.player.curseLevel + amount },
-    })),
-
-  addDiceHistory: (roll) =>
-    set((state) => ({
-      run: { ...state.run, diceHistory: [...state.run.diceHistory, roll] },
-    })),
-
-  nextFloor: () =>
-    set((state) => ({
-      run: {
-        ...state.run,
-        floor: state.run.floor + 1,
-        diceHistory: [],
-        totalFloorsCleared: state.run.totalFloorsCleared + 1,
-      },
-      visitedInterlude: false,
-    })),
-
-  equipItem: (item) =>
-    set((state) => {
-      const existing = state.equipped.find(e => e.slot === item.slot);
-      let newEquipped = state.equipped.filter(e => e.slot !== item.slot);
-      if (existing) {
-        state.backpack.push(existing);
-      }
-      newEquipped = [...newEquipped, item];
-      const encumbrance = newEquipped.reduce((sum, e) => sum + e.weight, 0)
-        + state.backpack.reduce((sum, b) => sum + b.weight, 0);
-      return {
-        equipped: newEquipped,
-        backpack: state.backpack.filter(b => b.id !== item.id),
-        player: { ...state.player, encumbrance },
-      };
-    }),
-
-  unequipItem: (itemId) =>
-    set((state) => {
-      const item = state.equipped.find(e => e.id === itemId);
-      if (!item) return state;
-      const newEquipped = state.equipped.filter(e => e.id !== itemId);
-      const newBackpack = [...state.backpack, item];
-      const encumbrance = newEquipped.reduce((sum, e) => sum + e.weight, 0)
-        + newBackpack.reduce((sum, b) => sum + b.weight, 0);
-      return {
-        equipped: newEquipped,
-        backpack: newBackpack,
-        player: { ...state.player, encumbrance },
-      };
-    }),
-
-  addToBackpack: (item) =>
-    set((state) => {
-      const newBackpack = [...state.backpack, item];
-      const encumbrance = state.equipped.reduce((sum, e) => sum + e.weight, 0)
-        + newBackpack.reduce((sum, b) => sum + b.weight, 0);
-      return {
-        backpack: newBackpack,
-        player: { ...state.player, encumbrance },
-      };
-    }),
-
-  addToDimensionalPouch: (item) =>
-    set((state) => ({
-      dimensionalPouch: [...state.dimensionalPouch, item],
-    })),
-
-  addCardToDeck: (card) =>
-    set((state) => ({
-      deck: [...state.deck, card],
-    })),
-
-  removeCardFromDeck: (cardId) =>
-    set((state) => ({
-      deck: state.deck.filter(c => c.id !== cardId),
-    })),
-
-  addFaithTag: (tag) =>
-    set((state) => {
-      if (state.player.faithTags.includes(tag as never)) return state;
-      return {
-        player: {
-          ...state.player,
-          faithTags: [...state.player.faithTags, tag as never],
-        },
-      };
-    }),
-
-  contributeToVillage: (gold, faith) =>
-    set((state) => ({
-      player: { ...state.player, gold: state.player.gold - gold },
-      village: {
-        ...state.village,
-        faithReserve: state.village.faithReserve + faith,
-      },
-    })),
-
-  startNewRun: () =>
-    set((state) => ({
-      currentScene: 'board',
-      player: {
-        ...INITIAL_PLAYER,
-        stats: state.player.stats, // keep upgraded stats
-        maxHp: 60 + state.player.stats.con * 5,
-        hp: 60 + state.player.stats.con * 5,
-        maxFaith: 20 + (state.village.buildings.find(b => b.id === 'church')?.built ? 3 : 0),
-        faith: 5 + state.village.population,
-        gold: 50 + state.village.taxPerRun,
-        maxEncumbrance: 10 + state.player.stats.str * 2,
-      },
-      run: {
-        floor: 1,
-        maxFloor: 10,
-        diceHistory: [],
-        totalFloorsCleared: state.run.totalFloorsCleared,
-      },
-      deck: [...STARTER_DECK],
-      visitedInterlude: false,
-    })),
-
-  resetGame: () =>
-    set({
-      currentScene: 'board',
-      player: { ...INITIAL_PLAYER },
-      run: { ...INITIAL_RUN },
-      village: { ...INITIAL_VILLAGE },
-      equipped: [],
-      backpack: [],
-      dimensionalPouch: [],
-      deck: [...STARTER_DECK],
-      visitedInterlude: false,
-    }),
+  updatePlayer: (partial) => set((s) => ({ player: { ...s.player, ...partial } })),
+  addGold: (amount) => set((s) => ({ player: { ...s.player, gold: Math.max(0, s.player.gold + amount) } })),
+  addFaith: (amount) => set((s) => ({
+    player: { ...s.player, faith: Math.max(0, Math.min(s.player.maxFaith, s.player.faith + amount)) },
+  })),
+  takeDamage: (amount) => set((s) => {
+    const armor = s.player.armor;
+    const through = Math.max(0, amount - armor);
+    return { player: { ...s.player, hp: Math.max(0, s.player.hp - through), armor: Math.max(0, armor - amount) } };
+  }),
+  heal: (amount) => set((s) => ({ player: { ...s.player, hp: Math.min(s.player.maxHp, s.player.hp + amount) } })),
+  addCurse: (amount) => set((s) => ({ player: { ...s.player, curseLevel: s.player.curseLevel + amount } })),
+  addDiceHistory: (roll) => set((s) => ({ run: { ...s.run, diceHistory: [...s.run.diceHistory, roll] } })),
+  nextFloor: () => set((s) => ({
+    run: { ...s.run, floor: s.run.floor + 1, diceHistory: [], totalFloorsCleared: s.run.totalFloorsCleared + 1 },
+    visitedInterlude: false,
+  })),
+  equipItem: (item) => set((s) => {
+    const existing = s.equipped.find(e => e.slot === item.slot);
+    let newEquipped = s.equipped.filter(e => e.slot !== item.slot);
+    if (existing) { set(s => ({ backpack: [...s.backpack, existing] })); }
+    newEquipped = [...newEquipped, item];
+    const enc = newEquipped.reduce((sum, e) => sum + e.weight, 0) + s.backpack.reduce((sum, b) => sum + b.weight, 0);
+    return { equipped: newEquipped, backpack: s.backpack.filter(b => b.id !== item.id), player: { ...s.player, encumbrance: enc } };
+  }),
+  unequipItem: (itemId) => set((s) => {
+    const item = s.equipped.find(e => e.id === itemId);
+    if (!item) return s;
+    const newE = s.equipped.filter(e => e.id !== itemId);
+    const newB = [...s.backpack, item];
+    const enc = newE.reduce((sum, e) => sum + e.weight, 0) + newB.reduce((sum, b) => sum + b.weight, 0);
+    return { equipped: newE, backpack: newB, player: { ...s.player, encumbrance: enc } };
+  }),
+  addToBackpack: (item) => set((s) => {
+    const newB = [...s.backpack, item];
+    const enc = s.equipped.reduce((sum, e) => sum + e.weight, 0) + newB.reduce((sum, b) => sum + b.weight, 0);
+    return { backpack: newB, player: { ...s.player, encumbrance: enc } };
+  }),
+  addToDimensionalPouch: (item) => set((s) => ({ dimensionalPouch: [...s.dimensionalPouch, item] })),
+  addItem: (item) => set((s) => ({ items: [...s.items, item] })),
+  useItem: (itemId) => set((s) => {
+    const idx = s.items.findIndex(i => i.id === itemId);
+    if (idx === -1) return s;
+    const items = [...s.items];
+    items.splice(idx, 1);
+    return { items };
+  }),
+  addRelic: (relic) => set((s) => {
+    if (s.relics.length >= 6) return s;
+    return { relics: [...s.relics, relic] };
+  }),
+  removeRelic: (relicId) => set((s) => ({ relics: s.relics.filter(r => r.id !== relicId) })),
+  addFaithTag: (tag) => set((s) => {
+    if (s.player.faithTags.includes(tag as never)) return s;
+    return { player: { ...s.player, faithTags: [...s.player.faithTags, tag as never] } };
+  }),
+  contributeToVillage: (gold, faith) => set((s) => ({
+    player: { ...s.player, gold: s.player.gold - gold },
+    village: { ...s.village, faithReserve: s.village.faithReserve + faith },
+  })),
+  startNewRun: () => set((s) => ({
+    currentScene: 'board',
+    player: {
+      ...INITIAL_PLAYER,
+      stats: s.player.stats,
+      maxHp: 60 + s.player.stats.con * 5,
+      hp: 60 + s.player.stats.con * 5,
+      maxFaith: 20 + (s.village.buildings.find(b => b.id === 'church')?.built ? 3 : 0),
+      faith: 5 + s.village.population,
+      gold: 50 + s.village.taxPerRun,
+      maxEncumbrance: 10 + s.player.stats.str * 2,
+    },
+    run: { floor: 1, maxFloor: 10, diceHistory: [], totalFloorsCleared: s.run.totalFloorsCleared },
+    equipped: [], backpack: [], dimensionalPouch: [], items: [], relics: [],
+    visitedInterlude: false,
+  })),
+  resetGame: () => set({
+    currentScene: 'board',
+    player: { ...INITIAL_PLAYER },
+    run: { ...INITIAL_RUN },
+    village: { ...INITIAL_VILLAGE },
+    equipped: [], backpack: [], dimensionalPouch: [],
+    items: [], relics: [],
+    showRewardModal: false, pendingRewards: null,
+    visitedInterlude: false,
+  }),
+  setShowRewardModal: (v) => set({ showRewardModal: v }),
+  setPendingRewards: (r) => set({ pendingRewards: r }),
 }));

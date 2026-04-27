@@ -1,0 +1,6 @@
+{
+  "api_job_id": "f4854cc2-0c20-48cb-baec-51a0a9aacc90",
+  "status": "queued",
+  "poll_interval_seconds": 3,
+  "poll_url": "https://api.meowart.ai/api/pixel-gen/jobs?id=f4854cc2-0c20-48cb-baec-51a0a9aacc90"
+}

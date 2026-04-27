@@ -15,8 +15,6 @@ export type CellType =
   | 'void'
   | 'start';
 
-export type CardType = 'attack' | 'defense' | 'faith' | 'heretic' | 'curse' | 'miracle' | 'equipment';
-
 export type DamageType = 'physical' | 'magical' | 'piercing';
 
 export type EquipmentSlot =
@@ -35,6 +33,12 @@ export type FaithTag =
 
 export type EnemyIntent = 'attack' | 'block' | 'summon' | 'curse' | 'buff';
 
+export type ItemType = 'heal' | 'attack' | 'buff' | 'special';
+
+export type RewardType = 'item' | 'equipment' | 'gold' | 'restore' | 'relic';
+
+export type Quality = 'common' | 'fine' | 'rare' | 'legendary';
+
 export interface Stats {
   str: number;
   agi: number;
@@ -43,7 +47,6 @@ export interface Stats {
   fai: number;
 }
 
-/** Elona-style dice damage formula: XdY+Z(C)[+-R] */
 export interface DamageFormula {
   diceCount: number;
   diceFaces: number;
@@ -52,18 +55,32 @@ export interface DamageFormula {
   variance: number;
 }
 
-/** Weapon data for ATB combat */
 export interface Weapon {
   id: string;
   name: string;
-  /** Base attack speed (higher = faster) */
   baseSpeed: number;
-  /** Damage formula for normal attacks */
   formula: DamageFormula;
   weight: number;
   description: string;
-  /** Equipment set this weapon belongs to */
   set: EquipmentSet;
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  type: ItemType;
+  description: string;
+  effect: string;
+  amount: number;
+  maxStack: number;
+  quality: Quality;
+}
+
+export interface Relic {
+  id: string;
+  name: string;
+  description: string;
+  effect: string;
 }
 
 export interface Cell {
@@ -75,13 +92,10 @@ export interface Cell {
   corrupted: boolean;
 }
 
-/** Combat Action - available when ATB gauge is full */
 export interface CombatAction {
   id: string;
   name: string;
   type: 'attack' | 'skill' | 'item' | 'defend' | 'flee';
-  cardType: CardType;
-  /** AP cost removed in ATB system - actions consume gauge instead */
   description: string;
   formula?: DamageFormula;
   block?: number;
@@ -90,24 +104,20 @@ export interface CombatAction {
   hpCost?: number;
   heal?: number;
   color: string;
-  consumable?: boolean;
   usesBoardDice?: boolean;
-  /** Extra cooldown in seconds added after action */
   extraCooldown?: number;
 }
 
-/** Legacy Card type for deck/rewards/interlude */
-export interface Card {
+export interface RewardOption {
   id: string;
-  name: string;
-  type: CardType;
-  cost: number;
-  description: string;
-  damage?: number;
-  block?: number;
-  faithCost?: number;
-  faithGain?: number;
-  color: string;
+  type: RewardType;
+  label: string;
+  icon: string;
+  item?: Item;
+  equipment?: EquipmentItem;
+  relic?: Relic;
+  gold?: number;
+  restore?: { hp?: number; faith?: number; curse?: number; };
 }
 
 export interface Enemy {
@@ -116,7 +126,6 @@ export interface Enemy {
   hp: number;
   maxHp: number;
   armor: number;
-  /** Enemy attack speed */
   speed: number;
   intent: EnemyIntent;
   intentValue: number;
@@ -132,13 +141,6 @@ export interface EquipmentItem {
   weight: number;
   stats: Partial<Stats>;
   description: string;
-}
-
-export interface Relic {
-  id: string;
-  name: string;
-  description: string;
-  effect: string;
 }
 
 export interface GameEvent {
@@ -201,30 +203,17 @@ export interface Villager {
   specialty: string;
 }
 
-export interface InterludeReward {
-  cards: Card[];
-  equipment: EquipmentItem[];
-  relics: Relic[];
-}
-
-/** ATB gauge unit for real-time combat */
 export interface ATBUnit {
   id: string;
   name: string;
-  /** Current gauge progress 0-100 */
   gauge: number;
-  /** Speed at which gauge fills (points per tick) */
   speed: number;
   isPlayer: boolean;
-  /** True when gauge is full and waiting for action selection */
   isActing: boolean;
-  /** Extra cooldown to apply after action (for skills) */
   extraCooldown: number;
-  /** Reference to enemy data (if not player) */
   enemyRef?: Enemy;
 }
 
-/** Result of a dice damage roll */
 export interface DamageResult {
   rawDamage: number;
   isCrit: boolean;

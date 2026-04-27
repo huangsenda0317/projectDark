@@ -1,0 +1,30 @@
+{
+  "command": "credits-balance",
+  "started_at": "2026-04-27T14:13:00",
+  "finished_at": "2026-04-27T14:13:06",
+  "run_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art/20260427_141300_credits-balance",
+  "work_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art",
+  "effective_output_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art/20260427_141300_credits-balance",
+  "request": {
+    "cli_args": {
+      "api_base": "https://api.meowart.ai",
+      "api_key": "ma_l...IkpQ",
+      "timeout": 240,
+      "max_wait": 900,
+      "poll_interval": 3.0,
+      "work_dir": "/Users/huangsenda/Project/projectDark/.agents/skills/game-assets/.meow_art",
+      "output_dir": "",
+      "no_download": false,
+      "insecure": false,
+      "command": "credits-balance"
+    },
+    "payload": {}
+  },
+  "response": {
+    "trial_credits": 200,
+    "credits": 600,
+    "next_trial_credit_expires_at": "2026-06-25T07:35:43.116069Z"
+  },
+  "downloads": [],
+  "error": ""
+}

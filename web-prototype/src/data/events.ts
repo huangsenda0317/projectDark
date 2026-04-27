@@ -13,7 +13,7 @@ export const RANDOM_EVENTS: GameEvent[] = [
     title: '异端的小册子',
     description: '路边散落着一本被雨水浸湿的小册子，封面上画着禁忌的符文。',
     optionA: { label: '焚毁（+3 信仰，获得"正统"标签）', effect: 'faith_+3_tag_orthodox' },
-    optionB: { label: '阅读（-2 信仰，获得异端卡）', effect: 'faith_-2_card_heretic' },
+    optionB: { label: '阅读（-2 信仰，获得异端道具）', effect: 'faith_-2_item_heretic' },
   },
   {
     id: 'collapsed_shrine',
@@ -26,7 +26,7 @@ export const RANDOM_EVENTS: GameEvent[] = [
     id: 'dying_knight',
     title: '临死的骑士',
     description: '一位身披破烂铠甲的骑士倒在血泊中，他的剑还紧紧握在手中。',
-    optionA: { label: '救治（付出 5HP，获得传承卡）', effect: 'hp_-5_card_legacy' },
+    optionA: { label: '救治（付出 5HP，获得传承装备）', effect: 'hp_-5_equip_legacy' },
     optionB: { label: '问询（获得情报，下层棋盘可预览）', effect: 'preview_next_floor' },
   },
   {
@@ -34,7 +34,7 @@ export const RANDOM_EVENTS: GameEvent[] = [
     title: '神明的低语',
     description: '一阵不可名状的低语在你脑海中回响，既像命令又像请求。',
     optionA: { label: '顺从（随机效果）', effect: 'random_blessing' },
-    optionB: { label: '质疑（-2 信仰，但获得一张强力异端牌）', effect: 'faith_-2_card_heretic_strong' },
+    optionB: { label: '质疑（-2 信仰，但获得一件强力异端道具）', effect: 'faith_-2_item_heretic_strong' },
   },
 ];
 
