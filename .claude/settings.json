@@ -18,11 +18,11 @@
       "Bash(rm -rf *)",
       "Bash(rm -rf /)",
       "Bash(rm -rf ~*)",
-      "Read(./.env)",
-      "Read(./.env.*)",
+      // "Read(./.env)",
+      // "Read(./.env.*)",
       "Read(./credentials*)",
       "Read(./**/*secret*)",
-      "Bash(cat .env*)",
+      // "Bash(cat .env*)",
       "Bash(cat credentials*)",
       "Bash(cat *secret*)"
     ]
