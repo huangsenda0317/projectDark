@@ -4,7 +4,7 @@
 projectDark/
 ├── CLAUDE.md                        # Master configuration (this file)
 ├── README.md                        # Human-readable project overview
-├── GDD_CircleOfFaith.md            # Game Design Document (Chinese)
+├── GDD.md            # Game Design Document (Chinese)
 ├── LICENSE                          # MIT License
 ├── UPGRADING.md                     # Version migration guide
 │

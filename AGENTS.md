@@ -308,7 +308,7 @@ If those files are empty or missing, the project is likely at:
 
 ## Key References
 
-- `GDD_CircleOfFaith.md` -- Full game design document (Chinese, 823 lines)
+- `GDD.md` -- Full game design document (Chinese, 823 lines)
 - `.claude/docs/directory-structure.md` -- Complete directory layout
 - `.claude/docs/technical-preferences.md` -- Godot-specific conventions
 - `.claude/docs/coding-standards.md` -- Detailed GDScript standards
