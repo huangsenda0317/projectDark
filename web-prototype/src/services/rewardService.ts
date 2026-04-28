@@ -3,19 +3,15 @@ import { useGameStore } from '../stores/useGameStore';
 import { getRandomItem } from '../data/items';
 import { getRandomRelic } from '../data/relics';
 import { EQUIPMENT_ITEMS } from '../data/equipmentSets';
+import { generateRandomDice } from '../data/dice';
 
 export function generateRewards(floor: number, isElite: boolean): RewardOption[] {
   const options: RewardOption[] = [];
   const game = useGameStore.getState();
 
-  // 3 random reward options
-  const types: ('item' | 'equipment' | 'gold' | 'restore' | 'relic')[] = [];
-
-  if (isElite) {
-    types.push('equipment', 'equipment', 'relic', 'item', 'gold', 'restore');
-  } else {
-    types.push('item', 'item', 'item', 'equipment', 'equipment', 'gold', 'gold', 'restore', 'restore');
-  }
+  const types: string[] = isElite
+    ? ['equipment', 'equipment', 'relic', 'dice', 'dice', 'item', 'gold', 'restore']
+    : ['item', 'item', 'item', 'equipment', 'equipment', 'gold', 'gold', 'dice', 'restore', 'restore'];
 
   function pickType(): string {
     return types[Math.floor(Math.random() * types.length)];
@@ -23,7 +19,7 @@ export function generateRewards(floor: number, isElite: boolean): RewardOption[]
 
   while (options.length < 3) {
     const type = pickType();
-    if (options.find(o => o.type === type) && type !== 'item') continue; // avoid duplicates
+    if (options.find(o => o.type === type) && type !== 'item') continue;
 
     switch (type) {
       case 'item': {
@@ -56,6 +52,17 @@ export function generateRewards(floor: number, isElite: boolean): RewardOption[]
           label: `${amount} 金币`,
           icon: '💰',
           gold: amount,
+        });
+        break;
+      }
+      case 'dice': {
+        const dice = generateRandomDice(floor);
+        options.push({
+          id: `dice-${dice.id}`,
+          type: 'dice',
+          label: `${dice.name} (D${dice.faces})`,
+          icon: '🎲',
+          dice,
         });
         break;
       }

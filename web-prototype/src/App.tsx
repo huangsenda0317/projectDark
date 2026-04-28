@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useGameStore } from './stores/useGameStore';
 import { useBoardStore } from './stores/useBoardStore';
 import { TopBar } from './components/ui/TopBar';

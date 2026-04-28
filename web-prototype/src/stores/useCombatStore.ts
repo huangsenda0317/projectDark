@@ -1,173 +1,60 @@
 import { create } from 'zustand';
-import type { Enemy, DiceSlot, DamageResult, Weapon, BattleDice } from '../types/game';
-import { calculateDamage, applyStatBonuses } from '../services/diceDamageService';
-import { getWeapon, getBattleDiceCount, meetsRequirement } from '../data/weapons';
+import type { Enemy, DiceEntity, EquipmentItem, DamageResult, EmbeddedSlot } from '../types/game';
+import { buildEmbeddedFormula, calculateDamage, formatFormula } from '../services/diceDamageService';
+import { getWeapon } from '../data/weapons';
 import { getRandomEnemy } from '../data/enemies';
 import { useGameStore } from './useGameStore';
 
 interface CombatState {
-  // Dice pool
-  battleDice: BattleDice[];
-  maxDice: number;
-  rerollsLeft: number;
-  selectedDieIndex: number | null;
-  // Dice slots (weapon + basic actions + set skills)
-  diceSlots: DiceSlot[];
-  allocations: Record<string, number[]>; // slot ID → allocated die indices
-  // Enemies
+  phase: 'embedding' | 'combat' | 'ended';
+  // Embedding
+  availableDice: DiceEntity[];
+  embeddedSlots: EmbeddedSlot[];
+  equippedItems: EquipmentItem[];
+  // Combat
   enemies: Enemy[];
-  // Combat state
   combatLog: string[];
-  combatEnded: boolean;
   victory: boolean;
   lastDamageResult: DamageResult | null;
-  currentWeapon: Weapon | null;
-  turnPhase: 'roll' | 'allocate' | 'execute';
-
   // Actions
   startCombat: (floor: number) => void;
-  rollDice: () => void;
-  selectDie: (index: number) => void;
-  allocateDie: (slotId: string) => void;
-  unallocateDie: (slotId: string) => void;
-  rerollUnallocated: () => void;
-  commitTurn: () => void;
+  embedDie: (dieId: string, slotId: string) => void;
+  unembedDie: (slotId: string) => void;
+  confirmEmbedding: () => void;
+  playerAttack: (enemyIndex: number) => void;
+  playerDefend: () => void;
+  playerSkill: () => void;
+  playerUseItem: (itemId: string) => void;
   enemyAct: () => void;
   addCombatLog: (msg: string) => void;
   resetCombat: () => void;
 }
 
-/** Build available dice slots based on equipped weapon and set bonuses */
-function buildDiceSlots(weapon: Weapon | null): DiceSlot[] {
-  const slots: DiceSlot[] = [];
-
-  // Weapon attack slot
-  if (weapon) {
-    slots.push({
-      id: 'slot_weapon',
-      name: `${weapon.name}攻击`,
-      type: 'attack',
-      diceRequirement: weapon.diceRequirement,
-      formula: weapon.formula,
-      color: '#c82014',
-      description: weapon.description,
-    });
-  }
-
-  // Basic defend slot
-  slots.push({
-    id: 'slot_defend',
-    name: '格挡',
-    type: 'defend',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    block: 5,
-    color: '#2b7de9',
-    description: '获得 5 点护甲',
-  });
-
-  // Board-dice-linked skills
-  slots.push({
-    id: 'slot_judgment',
-    name: '神判之刃',
-    type: 'skill',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    formula: { diceCount: 2, diceFaces: 6, flatBonus: 0, critChance: 5, variance: 2 },
-    usesBoardDice: true,
-    color: '#cba258',
-    description: '借用棋盘骰子之力的一击',
-  });
-
-  slots.push({
-    id: 'slot_heretic_flame',
-    name: '异端火焰',
-    type: 'skill',
-    diceRequirement: { type: 'parity', value: 'odd', diceCost: 1, label: '奇数点' },
-    formula: { diceCount: 3, diceFaces: 13, flatBonus: 5, critChance: 8, variance: 4 },
-    faithCost: 2,
-    color: '#7c3aed',
-    description: '禁忌的火焰，高波动',
-  });
-
-  slots.push({
-    id: 'slot_priest_bless',
-    name: '修士祝祷',
-    type: 'skill',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    formula: { diceCount: 1, diceFaces: 6, flatBonus: 8, critChance: 3, variance: 1 },
-    faithCost: 1,
-    color: '#cba258',
-    description: '稳定低波动的神圣打击',
-  });
-
-  // Lucky Pray
-  slots.push({
-    id: 'slot_lucky_pray',
-    name: '幸运祈祷',
-    type: 'skill',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    heal: 5,
-    color: '#cba258',
-    description: '若本层骰子点数和>15，回复5HP',
-  });
-
-  // Fortune Flip (board dice → armor)
-  slots.push({
-    id: 'slot_fortune_flip',
-    name: '命运翻转',
-    type: 'defend',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    color: '#2b7de9',
-    description: '将本层已用骰子点数总和转化为护甲',
-  });
-
-  // Item slot
-  slots.push({
-    id: 'slot_item_heal',
-    name: '使用圣水',
-    type: 'item',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    heal: 15,
-    color: '#ffffff',
-    description: '回复 15 HP',
-  });
-
-  // Flee slot
-  slots.push({
-    id: 'slot_flee',
-    name: '逃跑',
-    type: 'flee',
-    diceRequirement: { type: 'any', diceCost: 1, label: '任意骰子' },
-    color: '#666666',
-    description: '离开战斗，失去 5 HP',
-  });
-
-  return slots;
-}
-
-/** Roll a single D6 */
-function rollD6(): number {
-  return Math.floor(Math.random() * 6) + 1;
+/** Build embedded slots from equipped items */
+function buildSlots(equipped: EquipmentItem[]): EmbeddedSlot[] {
+  return equipped
+    .filter(e => e.socketType)
+    .map(e => ({
+      equipmentSlotId: e.slot,
+      socketType: e.socketType!,
+      embeddedDie: null,
+    }));
 }
 
 export const useCombatStore = create<CombatState>((set, get) => ({
-  battleDice: [],
-  maxDice: 3,
-  rerollsLeft: 1,
-  selectedDieIndex: null,
-  diceSlots: [],
-  allocations: {},
+  phase: 'embedding',
+  availableDice: [],
+  embeddedSlots: [],
+  equippedItems: [],
   enemies: [],
   combatLog: [],
-  combatEnded: false,
   victory: false,
   lastDamageResult: null,
-  currentWeapon: null,
-  turnPhase: 'allocate',
 
   startCombat: (floor) => {
     const game = useGameStore.getState();
-    const weapon = getWeapon('wpn_shortsword') || null;
-    const diceCount = getBattleDiceCount(game.player.stats.agi, game.player.encumbrance <= game.player.maxEncumbrance * 0.5);
+    const equipped = game.equipped;
+    const diceBox = [...game.diceBox];
 
     const enemyCount = floor >= 6 ? 2 : 1;
     const enemies: Enemy[] = [];
@@ -175,280 +62,273 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       enemies.push(getRandomEnemy(floor));
     }
 
-    // Roll initial dice
-    const battleDice: BattleDice[] = [];
-    for (let i = 0; i < diceCount; i++) {
-      battleDice.push({ index: i, value: rollD6(), allocated: false });
-    }
-
-    const slots = buildDiceSlots(weapon);
+    const slots = buildSlots(equipped);
 
     set({
-      battleDice,
-      maxDice: diceCount,
-      rerollsLeft: 1,
-      selectedDieIndex: null,
-      diceSlots: slots,
-      allocations: {},
+      phase: 'embedding',
+      availableDice: diceBox,
+      embeddedSlots: slots,
+      equippedItems: equipped,
       enemies,
-      combatLog: [`⚔️ 战斗开始！遭遇 ${enemies.map(e => e.name).join('、')}！`, `🎲 投出 ${battleDice.map(d => d.value).join(' ')} —— 将骰子分配到技能槽`],
-      combatEnded: false,
+      combatLog: [
+        `⚔️ 战斗开始！遭遇 ${enemies.map(e => e.name).join('、')}！`,
+        `🎲 战前嵌入阶段：将骰子嵌入装备骰槽`,
+      ],
       victory: false,
       lastDamageResult: null,
-      currentWeapon: weapon,
-      turnPhase: 'allocate',
     });
   },
 
-  rollDice: () => {
+  embedDie: (dieId, slotId) => {
     const state = get();
-    const diceCount = state.maxDice;
-    const battleDice: BattleDice[] = [];
-    for (let i = 0; i < diceCount; i++) {
-      battleDice.push({ index: i, value: rollD6(), allocated: false });
-    }
-    set({
-      battleDice,
-      rerollsLeft: 1,
-      selectedDieIndex: null,
-      allocations: {},
-      turnPhase: 'allocate',
-    });
-    get().addCombatLog(`🎲 新回合！投出 ${battleDice.map(d => d.value).join(' ')}`);
-  },
+    if (state.phase !== 'embedding') return;
 
-  selectDie: (index) => {
-    const state = get();
-    const die = state.battleDice[index];
-    if (!die || die.allocated) return;
-    set({
-      selectedDieIndex: state.selectedDieIndex === index ? null : index,
-    });
-  },
+    const die = state.availableDice.find(d => d.id === dieId);
+    if (!die) return;
 
-  allocateDie: (slotId) => {
-    const state = get();
-    if (state.selectedDieIndex === null) return;
-    if (state.turnPhase !== 'allocate') return;
-
-    const die = state.battleDice[state.selectedDieIndex];
-    if (!die || die.allocated) return;
-
-    const slot = state.diceSlots.find(s => s.id === slotId);
+    const slot = state.embeddedSlots.find(s => s.equipmentSlotId === slotId);
     if (!slot) return;
-
-    // Check if die meets requirement
-    if (!meetsRequirement(die.value, { type: slot.diceRequirement.type, value: slot.diceRequirement.value })) {
-      get().addCombatLog(`❌ ${die.value} 不满足「${slot.name}」的需求（${slot.diceRequirement.label}）`);
+    if (slot.embeddedDie) {
+      get().addCombatLog(`⚠️ ${slotId} 已有骰子嵌入，请先取下`);
       return;
     }
 
-    // Check faith cost
-    if (slot.faithCost) {
-      const game = useGameStore.getState();
-      if (slot.faithCost > game.player.faith) {
-        get().addCombatLog('❌ 信仰不足！');
-        return;
-      }
-    }
-
-    // Unallocate previous die from this slot if present
-    const newAllocations = { ...state.allocations };
-    const prev = newAllocations[slotId] || [];
-    // Return previous dice to pool
-    for (const prevIdx of prev) {
-      state.battleDice[prevIdx].allocated = false;
-      state.battleDice[prevIdx].allocatedTo = undefined;
-    }
-    newAllocations[slotId] = [state.selectedDieIndex];
-
-    // Mark die as allocated
-    const newDice = state.battleDice.map((d, i) => {
-      if (i === state.selectedDieIndex) {
-        return { ...d, allocated: true, allocatedTo: slotId };
-      }
-      return d;
-    });
-
-    set({
-      battleDice: newDice,
-      allocations: newAllocations,
-      selectedDieIndex: null,
-    });
-
-    get().addCombatLog(`🎯 ${die.value} →「${slot.name}」`);
-  },
-
-  unallocateDie: (slotId) => {
-    const state = get();
-    const allocated = state.allocations[slotId];
-    if (!allocated || allocated.length === 0) return;
-
-    const newDice = state.battleDice.map(d => {
-      if (allocated.includes(d.index)) {
-        return { ...d, allocated: false, allocatedTo: undefined };
-      }
-      return d;
-    });
-
-    const newAllocations = { ...state.allocations };
-    delete newAllocations[slotId];
-
-    set({ battleDice: newDice, allocations: newAllocations });
-    get().addCombatLog(`↩️ 收回「${state.diceSlots.find(s => s.id === slotId)?.name || slotId}」的骰子`);
-  },
-
-  rerollUnallocated: () => {
-    const state = get();
-    if (state.rerollsLeft <= 0) return;
-    if (state.turnPhase !== 'allocate') return;
-
-    const newDice = state.battleDice.map(d => {
-      if (!d.allocated) {
-        return { ...d, value: rollD6() };
-      }
-      return d;
-    });
-
-    set({
-      battleDice: newDice,
-      rerollsLeft: state.rerollsLeft - 1,
-    });
-
-    get().addCombatLog(`🔄 重投未分配骰子 → ${newDice.filter(d => !d.allocated).map(d => d.value).join(' ')}`);
-  },
-
-  commitTurn: () => {
-    const state = get();
-    if (state.turnPhase !== 'allocate') return;
-
-    set({ turnPhase: 'execute' });
-
-    // Convert unused dice to shield
-    const unusedCount = state.battleDice.filter(d => !d.allocated).length;
-    if (unusedCount > 0) {
-      useGameStore.setState(s => ({
-        player: { ...s.player, armor: s.player.armor + unusedCount },
-      }));
-      get().addCombatLog(`🛡️ ${unusedCount} 颗未使用骰子 → +${unusedCount} 护盾`);
-    }
-
-    // Execute allocated actions
-    const logs: string[] = [];
-    let lastResult: DamageResult | null = null;
+    // Faith cost = floor(faces / 2)
+    const faithCost = Math.floor(die.faces / 2);
     const game = useGameStore.getState();
-    const enemies = state.enemies.map(e => ({ ...e }));
-    let playerArmor = game.player.armor;
-
-    for (const [slotId, dieIndices] of Object.entries(state.allocations)) {
-      const slot = state.diceSlots.find(s => s.id === slotId);
-      if (!slot || dieIndices.length === 0) continue;
-
-      // Consume faith
-      if (slot.faithCost) {
-        useGameStore.getState().addFaith(-slot.faithCost);
-      }
-
-      switch (slot.type) {
-        case 'attack':
-        case 'skill': {
-          if (!slot.formula) break;
-          const target = enemies.find(e => e.hp > 0);
-          if (!target) break;
-
-          let formula = applyStatBonuses(slot.formula, game.player.stats);
-          const boardDice = slot.usesBoardDice
-            ? (game.run.diceHistory[game.run.diceHistory.length - 1] ?? 0)
-            : null;
-
-          const result = calculateDamage(formula, target.armor, {
-            boardDiceRoll: boardDice ?? null,
-          });
-          lastResult = result;
-
-          target.hp -= result.damageDealt;
-          target.armor = Math.max(0, target.armor - result.armorBlocked);
-
-          const critMsg = result.isCrit ? ' 💥暴击！' : '';
-          logs.push(`${slot.name}${critMsg} → ${target.name} 受到 ${result.damageDealt} 点伤害！`);
-          if (target.hp <= 0) {
-            logs.push(`${target.name} 被击败了！`);
-          }
-          break;
-        }
-
-        case 'defend': {
-          if (slot.block) {
-            playerArmor += slot.block;
-            logs.push(`${slot.name} → 获得 ${slot.block} 点护甲。`);
-          }
-          if (slot.id === 'slot_fortune_flip') {
-            const diceSum = game.run.diceHistory.reduce((a, b) => a + b, 0);
-            playerArmor += diceSum;
-            logs.push(`命运翻转！骰子和 ${diceSum} → +${diceSum} 护甲。`);
-          }
-          break;
-        }
-
-        case 'item': {
-          if (slot.heal) {
-            useGameStore.getState().heal(slot.heal);
-            logs.push(`${slot.name} → 回复 ${slot.heal} HP。`);
-          }
-          break;
-        }
-
-        case 'flee': {
-          useGameStore.getState().takeDamage(5);
-          logs.push('逃跑成功！受到 5 点伤害。');
-          set({
-            combatEnded: true,
-            victory: false,
-            combatLog: [...state.combatLog, ...logs],
-            turnPhase: 'execute',
-          });
-          return;
-        }
-      }
+    if (faithCost > 0 && !game.consumeFaith(faithCost)) {
+      get().addCombatLog(`❌ 信仰不足！需要 ${faithCost} 点信仰`);
+      return;
     }
 
-    // Lucky Pray check
-    const luckySlot = state.allocations['slot_lucky_pray'];
-    if (luckySlot && luckySlot.length > 0) {
-      const diceSum = game.run.diceHistory.reduce((a, b) => a + b, 0);
-      if (diceSum > 15) {
-        useGameStore.getState().heal(5);
-        logs.push('幸运祈祷生效！骰子和 > 15，回复 5 HP。');
+    const newSlots = state.embeddedSlots.map(s =>
+      s.equipmentSlotId === slotId ? { ...s, embeddedDie: die } : s
+    );
+    const newDice = state.availableDice.filter(d => d.id !== dieId);
+
+    // Check for duplicate embed (half cost)
+    const halfCostMsg = faithCost > 0
+      ? `消耗 ${faithCost} 信仰` + (state.embeddedSlots.find(s => s.equipmentSlotId === slotId)?.embeddedDie ? '（半价）' : '')
+      : '';
+
+    set({
+      availableDice: newDice,
+      embeddedSlots: newSlots,
+    });
+
+    get().addCombatLog(
+      `🔮 ${die.name}(D${die.faces}) → 嵌入 ${slotId} ${faithCost > 0 ? halfCostMsg : ''}`
+    );
+  },
+
+  unembedDie: (slotId) => {
+    const state = get();
+    if (state.phase !== 'embedding') return;
+
+    const slot = state.embeddedSlots.find(s => s.equipmentSlotId === slotId);
+    if (!slot || !slot.embeddedDie) return;
+
+    const newSlots = state.embeddedSlots.map(s =>
+      s.equipmentSlotId === slotId ? { ...s, embeddedDie: null } : s
+    );
+    const newDice = [...state.availableDice, slot.embeddedDie];
+
+    set({
+      availableDice: newDice,
+      embeddedSlots: newSlots,
+    });
+
+    get().addCombatLog(`↩️ 从 ${slotId} 取回 ${slot.embeddedDie.name}`);
+  },
+
+  confirmEmbedding: () => {
+    const state = get();
+    if (state.phase !== 'embedding') return;
+
+    // Check at least weapon has a die embedded
+    const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
+    const hasEmbedded = state.embeddedSlots.some(s => s.embeddedDie);
+
+    set({ phase: 'combat' });
+
+    if (hasEmbedded) {
+      if (weaponSlot) {
+        const die = weaponSlot.embeddedDie!;
+        const weaponName = state.equippedItems.find(e => e.slot === weaponSlot.equipmentSlotId)?.name || '武器';
+        const formulaStr = `1d${die.faces}+${weaponSlot.socketType === 'weapon' ? '武器加值' : ''}`;
+        get().addCombatLog(`⚡ 确认嵌入！${weaponName} 激活公式 ${formulaStr}`);
       } else {
-        logs.push(`幸运祈祷未生效。骰子和 ${diceSum}。`);
+        get().addCombatLog('⚡ 确认嵌入！进入战斗阶段');
+      }
+    } else {
+      get().addCombatLog('⚡ 跳过嵌入，进入战斗阶段（仅基础属性）');
+    }
+  },
+
+  playerAttack: (enemyIndex) => {
+    const state = get();
+    if (state.phase !== 'combat') return;
+
+    const enemy = state.enemies[enemyIndex];
+    if (!enemy || enemy.hp <= 0) {
+      get().addCombatLog('目标已死亡');
+      return;
+    }
+
+    const game = useGameStore.getState();
+
+    // Find weapon slot with embedded die
+    const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
+
+    if (!weaponSlot) {
+      // Bare hands: 1d4 + STR bonus
+      const baseFormula = { diceCount: 1, diceFaces: 4, flatBonus: Math.floor(game.player.stats.str / 5), critChance: 0, variance: 0 };
+      const result = calculateDamage(baseFormula, enemy.armor);
+      enemy.hp -= result.damageDealt;
+      enemy.armor = Math.max(0, enemy.armor - result.armorBlocked);
+
+      set({ lastDamageResult: result });
+      get().addCombatLog(`👊 徒手攻击 → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`);
+    } else {
+      const die = weaponSlot.embeddedDie!;
+      const weaponItem = state.equippedItems.find(e => e.slot === weaponSlot.equipmentSlotId);
+      const weapon = weaponItem?.baseFormula && weaponItem?.diceSocket
+        ? { id: weaponItem.id, name: weaponItem.name, baseFormula: weaponItem.baseFormula, diceSocket: weaponItem.diceSocket, weight: weaponItem.weight, description: weaponItem.description, set: weaponItem.set }
+        : getWeapon('wpn_shortsword')!;
+
+      const formula = buildEmbeddedFormula(weapon, die, game.player.stats);
+
+      // Apply embed affix bonuses
+      for (const affix of die.affixes) {
+        if (affix.type === 'embed') {
+          if (affix.id === 'sharp') formula.critChance += 5;
+          if (affix.id === 'burning') formula.flatBonus += Math.floor(die.faces * 0.5);
+        }
+      }
+
+      const result = calculateDamage(formula, enemy.armor);
+      enemy.hp -= result.damageDealt;
+      enemy.armor = Math.max(0, enemy.armor - result.armorBlocked);
+
+      // Lifesteal
+      for (const affix of die.affixes) {
+        if (affix.id === 'lifesteal') {
+          const healAmt = Math.floor(result.damageDealt * 0.1);
+          if (healAmt > 0) {
+            useGameStore.getState().heal(healAmt);
+            get().addCombatLog(`🩸 吸血恢复 ${healAmt} HP`);
+          }
+        }
+      }
+
+      set({ lastDamageResult: result });
+      get().addCombatLog(
+        `⚔️ ${weapon.name}(${formatFormula(formula)}) → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`
+      );
+
+      if (enemy.hp <= 0) {
+        get().addCombatLog(`${enemy.name} 被击败了！`);
       }
     }
 
-    // Update player armor
-    useGameStore.setState(s => ({
-      player: { ...s.player, armor: playerArmor },
-    }));
-
-    const aliveEnemies = enemies.filter(e => e.hp > 0);
-    const victory = aliveEnemies.length === 0;
-
-    if (victory) {
+    // Check victory
+    const aliveEnemies = state.enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
       const goldReward = 10 + game.run.floor * 2;
       useGameStore.getState().addGold(goldReward);
-      logs.push(`🏆 战斗胜利！获得 ${goldReward} 金币！`);
+      get().addCombatLog(`🏆 战斗胜利！获得 ${goldReward} 金币！`);
+      set({ phase: 'ended', victory: true });
+    } else {
+      set({ enemies: state.enemies.map(e => ({ ...e })) });
+      // Enemy turn
+      setTimeout(() => get().enemyAct(), 600);
+    }
+  },
+
+  playerDefend: () => {
+    const state = get();
+    if (state.phase !== 'combat') return;
+
+    let shield = 3; // base shield
+
+    // Add shield from armor embedded dice
+    for (const slot of state.embeddedSlots) {
+      if ((slot.socketType === 'armor' || slot.socketType === 'shield') && slot.embeddedDie) {
+        const die = slot.embeddedDie;
+        const multiplier = slot.socketType === 'shield' ? 2 : 1;
+        shield += die.faces * multiplier;
+
+        // Tough affix
+        for (const affix of die.affixes) {
+          if (affix.id === 'tough') shield += 2;
+        }
+      }
     }
 
-    set(s => ({
-      enemies: aliveEnemies,
-      lastDamageResult: lastResult,
-      combatLog: [...s.combatLog, ...logs],
-      combatEnded: victory,
-      victory,
+    useGameStore.setState(s => ({
+      player: { ...s.player, armor: s.player.armor + shield },
     }));
 
-    // Enemy turn
-    if (!victory) {
-      setTimeout(() => get().enemyAct(), 600);
+    get().addCombatLog(`🛡️ 防御！获得 ${shield} 点护甲`);
+  },
+
+  playerSkill: () => {
+    const state = get();
+    if (state.phase !== 'combat') return;
+
+    const game = useGameStore.getState();
+    const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
+    const dieFaces = weaponSlot?.embeddedDie?.faces || 6;
+
+    // Generic skill: 神判之刃 — uses board dice history
+    const lastBoardDice = game.run.diceHistory[game.run.diceHistory.length - 1] || 0;
+    const formula = {
+      diceCount: 2,
+      diceFaces: dieFaces,
+      flatBonus: lastBoardDice + Math.floor(game.player.stats.fai / 3),
+      critChance: 10,
+      variance: 2,
+    };
+
+    const target = state.enemies.find(e => e.hp > 0);
+    if (!target) return;
+
+    const result = calculateDamage(formula, target.armor, { boardDiceRoll: lastBoardDice });
+    target.hp -= result.damageDealt;
+    target.armor = Math.max(0, target.armor - result.armorBlocked);
+
+    set({ lastDamageResult: result });
+    get().addCombatLog(
+      `✨ 神判之刃(${formatFormula(formula)}) → ${target.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`
+    );
+  },
+
+  playerUseItem: (itemId) => {
+    const state = get();
+    if (state.phase !== 'combat') return;
+
+    const game = useGameStore.getState();
+    const item = game.items.find(i => i.id === itemId);
+    if (!item) {
+      get().addCombatLog('❌ 道具不存在');
+      return;
+    }
+
+    useGameStore.getState().useItem(itemId);
+
+    if (item.type === 'heal') {
+      useGameStore.getState().heal(item.amount);
+      get().addCombatLog(`🧪 使用 ${item.name} → 回复 ${item.amount} HP`);
+    } else if (item.type === 'attack') {
+      const target = state.enemies.find(e => e.hp > 0);
+      if (target) {
+        target.hp -= item.amount;
+        get().addCombatLog(`💣 使用 ${item.name} → ${target.name} 受到 ${item.amount} 点伤害`);
+      }
+    } else if (item.type === 'buff') {
+      get().addCombatLog(`✨ 使用 ${item.name} → ${item.effect}`);
+    } else {
+      get().addCombatLog(`📜 使用 ${item.name}`);
     }
   },
 
@@ -456,7 +336,6 @@ export const useCombatStore = create<CombatState>((set, get) => ({
     const state = get();
     const game = useGameStore.getState();
     const logs: string[] = [];
-
     let playerHp = game.player.hp;
     let playerArmor = game.player.armor;
 
@@ -479,38 +358,30 @@ export const useCombatStore = create<CombatState>((set, get) => ({
         useGameStore.getState().addCurse(1);
       }
 
-      // Randomize next intent (weighted toward attack)
+      // Random next intent
       const intents = ['attack', 'attack', 'block', 'curse'] as const;
       enemy.intent = intents[Math.floor(Math.random() * intents.length)];
     }
 
-    // Apply damage
     if (playerHp !== game.player.hp) {
       const dmgTaken = game.player.hp - playerHp;
       useGameStore.getState().takeDamage(dmgTaken);
     }
 
-    // Update armor
     useGameStore.setState(s => ({
       player: { ...s.player, armor: playerArmor },
     }));
 
     const defeated = useGameStore.getState().player.hp <= 0;
-
     if (defeated) {
       logs.push('💀 你被击败了...');
     }
 
     set(s => ({
       combatLog: [...s.combatLog, ...logs],
-      combatEnded: defeated,
+      phase: defeated ? 'ended' : 'combat',
       victory: false,
     }));
-
-    // Roll new dice for next turn if still alive
-    if (!defeated) {
-      setTimeout(() => get().rollDice(), 400);
-    }
   },
 
   addCombatLog: (msg) =>
@@ -520,19 +391,14 @@ export const useCombatStore = create<CombatState>((set, get) => ({
 
   resetCombat: () =>
     set({
-      battleDice: [],
-      maxDice: 3,
-      rerollsLeft: 1,
-      selectedDieIndex: null,
-      diceSlots: [],
-      allocations: {},
+      phase: 'embedding',
+      availableDice: [],
+      embeddedSlots: [],
+      equippedItems: [],
       enemies: [],
       combatLog: [],
-      combatEnded: false,
       victory: false,
       lastDamageResult: null,
-      currentWeapon: null,
-      turnPhase: 'allocate',
     }),
 }));
 

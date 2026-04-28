@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Cell, CellType } from '../types/game';
+import type { Cell, CellType, DiceEntity } from '../types/game';
 
 const CELL_TYPE_POOL: CellType[] = [
   'combat', 'combat', 'combat', 'combat',
@@ -12,9 +12,8 @@ const CELL_TYPE_POOL: CellType[] = [
   'boss',
 ];
 
-function generateCells(count: number, floor: number): Cell[] {
+function generateCells(count: number, _floor: number): Cell[] {
   const cells: Cell[] = [];
-  // Ensure at least one boss
   const bossIndex = Math.floor(Math.random() * count);
 
   for (let i = 0; i < count; i++) {
@@ -50,10 +49,13 @@ interface BoardState {
   showShopModal: boolean;
   showTreasureModal: boolean;
   currentEventId: string | null;
+  // Dice selection
+  selectedDie: DiceEntity | null;
+  moveError: string | null;
 
-  // Actions
   generateBoard: (floor: number) => void;
-  rollDice: () => number;
+  selectDie: (die: DiceEntity | null) => void;
+  rollDice: () => number | null;
   setDiceResult: (n: number | null) => void;
   setCanRoll: (v: boolean) => void;
   setHighlights: (cw: number | null, ccw: number | null) => void;
@@ -63,21 +65,20 @@ interface BoardState {
   setShowShopModal: (v: boolean) => void;
   setShowTreasureModal: (v: boolean) => void;
   setCurrentEventId: (id: string | null) => void;
+  clearMoveError: () => void;
   resetBoard: () => void;
 }
 
+/** GDD v0.3: cell count = 24 + floor * 2 */
 function getCellCount(floor: number): number {
-  if (floor <= 3) return 30;
-  if (floor <= 6) return 32;
-  if (floor <= 9) return 34;
-  return 36;
+  return 24 + floor * 2;
 }
 
-export const useBoardStore = create<BoardState>((set) => ({
+export const useBoardStore = create<BoardState>((set, get) => ({
   cells: [],
   playerIndex: 0,
   diceResult: null,
-  canRoll: true,
+  canRoll: false,
   isMoving: false,
   highlightCW: null,
   highlightCCW: null,
@@ -85,20 +86,43 @@ export const useBoardStore = create<BoardState>((set) => ({
   showShopModal: false,
   showTreasureModal: false,
   currentEventId: null,
+  selectedDie: null,
+  moveError: null,
 
   generateBoard: (floor) =>
     set({
       cells: generateCells(getCellCount(floor), floor),
       playerIndex: 0,
       diceResult: null,
-      canRoll: true,
+      canRoll: false,
       isMoving: false,
       highlightCW: null,
       highlightCCW: null,
+      selectedDie: null,
+      moveError: null,
     }),
 
+  selectDie: (die) => set({ selectedDie: die, moveError: null }),
+
   rollDice: () => {
-    const result = Math.floor(Math.random() * 6) + 1;
+    const s = get();
+    if (!s.selectedDie) {
+      set({ moveError: '请先从骰子匣选择一枚骰子' });
+      return null;
+    }
+    if (!s.selectedDie.canMove) {
+      set({ moveError: 'D100 太重了，掷不动！仅供嵌入战斗使用' });
+      return null;
+    }
+
+    const faces: number = s.selectedDie.faces;
+    let result: number = Math.floor(Math.random() * faces) + 1;
+
+    // D20 halving for movement (GDD section 6.4)
+    if (faces === 20) {
+      result = Math.floor(result / 2);
+    }
+
     set({ diceResult: result, canRoll: false });
     return result;
   },
@@ -112,7 +136,7 @@ export const useBoardStore = create<BoardState>((set) => ({
     set((state) => ({
       playerIndex: index,
       isMoving: false,
-      canRoll: true,
+      canRoll: false,
       diceResult: null,
       highlightCW: null,
       highlightCCW: null,
@@ -132,15 +156,18 @@ export const useBoardStore = create<BoardState>((set) => ({
   setShowShopModal: (v) => set({ showShopModal: v }),
   setShowTreasureModal: (v) => set({ showTreasureModal: v }),
   setCurrentEventId: (id) => set({ currentEventId: id }),
+  clearMoveError: () => set({ moveError: null }),
 
   resetBoard: () =>
     set({
       cells: [],
       playerIndex: 0,
       diceResult: null,
-      canRoll: true,
+      canRoll: false,
       isMoving: false,
       highlightCW: null,
       highlightCCW: null,
+      selectedDie: null,
+      moveError: null,
     }),
 }));

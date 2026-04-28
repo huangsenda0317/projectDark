@@ -1,4 +1,4 @@
-/** Game type definitions for Circle of Faith — Dice Allocation Combat */
+/** Game type definitions for 骰境：信仰轮回 / Dice Realms: Circle of Faith — Dice Embedding Combat */
 
 export type SceneType = 'board' | 'combat' | 'village' | 'interlude' | 'gameover';
 
@@ -35,22 +35,54 @@ export type EnemyIntent = 'attack' | 'block' | 'summon' | 'curse' | 'buff';
 
 export type ItemType = 'heal' | 'attack' | 'buff' | 'special';
 
-export type RewardType = 'item' | 'equipment' | 'gold' | 'restore' | 'relic';
+export type RewardType = 'item' | 'equipment' | 'gold' | 'restore' | 'relic' | 'dice';
 
 export type Quality = 'common' | 'fine' | 'rare' | 'legendary';
 
-/** Dice requirement types for equipment slots */
-export type DiceRequirementType = 'any' | 'threshold' | 'parity' | 'pair' | 'straight' | 'sum';
+// ─── Dice Entity System (GDD v0.3) ──────────────────────────
 
-export interface DiceRequirement {
-  type: DiceRequirementType;
-  /** For threshold: minimum value. For parity: 'odd' | 'even'. For sum: target value. */
-  value?: number | string;
-  /** How many dice this slot consumes */
-  diceCost: number;
-  /** Human-readable label for UI */
-  label: string;
+export type DiceQuality = 'common' | 'fine' | 'rare' | 'legendary';
+
+export type DiceFaceCount = 4 | 6 | 8 | 10 | 12 | 20 | 100;
+
+export type DiceAffixType = 'throw' | 'embed' | 'universal';
+
+export interface DiceAffix {
+  id: string;
+  name: string;
+  type: DiceAffixType;
+  effect: string;
+  quality: DiceQuality;
 }
+
+/** A collectible dice entity — the core item of the game */
+export interface DiceEntity {
+  id: string;
+  name: string;
+  quality: DiceQuality;
+  faces: DiceFaceCount;
+  affixes: DiceAffix[];
+  canMove: boolean; // D100 cannot be used for movement
+}
+
+// ─── Dice Socket (Equipment embedding) ──────────────────────
+
+export type SocketType = 'weapon' | 'armor' | 'shield' | 'accessory';
+
+/** How an equipment's dice socket modifies the embedded die's formula */
+export interface DiceSocket {
+  type: SocketType;
+  /** Multiplier for the embedded die's face count in the damage formula Y */
+  faceMultiplier: number;
+  /** Additional flat bonus from the socket */
+  flatBonus: number;
+  /** Additional crit from the socket */
+  critBonus: number;
+  /** Variance from the socket */
+  varianceBonus: number;
+}
+
+// ─── Stats & Formulas ───────────────────────────────────────
 
 export interface Stats {
   str: number;
@@ -68,16 +100,21 @@ export interface DamageFormula {
   variance: number;
 }
 
-/** A weapon has dice requirements to be activated in combat */
+// ─── Weapons (updated for embedding) ────────────────────────
+
 export interface Weapon {
   id: string;
   name: string;
-  formula: DamageFormula;
-  diceRequirement: DiceRequirement;
+  /** Base damage formula (diceCount, flatBonus, critChance, variance).
+   *  diceFaces is determined by the embedded die. */
+  baseFormula: DamageFormula;
+  diceSocket: DiceSocket;
   weight: number;
   description: string;
   set: EquipmentSet;
 }
+
+// ─── Items, Relics, Equipment ───────────────────────────────
 
 export interface Item {
   id: string;
@@ -97,6 +134,24 @@ export interface Relic {
   effect: string;
 }
 
+export interface EquipmentItem {
+  id: string;
+  name: string;
+  slot: EquipmentSlot;
+  set: EquipmentSet;
+  weight: number;
+  stats: Partial<Stats>;
+  description: string;
+  /** Socket type determines embedding behavior */
+  socketType?: SocketType;
+  /** Base formula for weapon-type equipment */
+  baseFormula?: DamageFormula;
+  /** Dice socket for modifier bonuses */
+  diceSocket?: DiceSocket;
+}
+
+// ─── Board & Cells ──────────────────────────────────────────
+
 export interface Cell {
   id: number;
   type: CellType;
@@ -106,28 +161,7 @@ export interface Cell {
   corrupted: boolean;
 }
 
-/** A dice-activated slot in combat — can be an equipment piece or a basic action */
-export interface DiceSlot {
-  id: string;
-  name: string;
-  type: 'attack' | 'skill' | 'item' | 'defend' | 'flee';
-  diceRequirement: DiceRequirement;
-  formula?: DamageFormula;
-  block?: number;
-  faithCost?: number;
-  heal?: number;
-  color: string;
-  usesBoardDice?: boolean;
-  description: string;
-}
-
-/** Represents a rolled battle die */
-export interface BattleDice {
-  index: number;
-  value: number;
-  allocated: boolean;
-  allocatedTo?: string; // slot ID
-}
+// ─── Rewards ────────────────────────────────────────────────
 
 export interface RewardOption {
   id: string;
@@ -138,8 +172,11 @@ export interface RewardOption {
   equipment?: EquipmentItem;
   relic?: Relic;
   gold?: number;
-  restore?: { hp?: number; faith?: number; curse?: number; };
+  dice?: DiceEntity;
+  restore?: { hp?: number; faith?: number; curse?: number };
 }
+
+// ─── Enemies (intent system preserved) ──────────────────────
 
 export interface Enemy {
   id: string;
@@ -153,15 +190,7 @@ export interface Enemy {
   sprite: string;
 }
 
-export interface EquipmentItem {
-  id: string;
-  name: string;
-  slot: EquipmentSlot;
-  set: EquipmentSet;
-  weight: number;
-  stats: Partial<Stats>;
-  description: string;
-}
+// ─── Events ─────────────────────────────────────────────────
 
 export interface GameEvent {
   id: string;
@@ -170,6 +199,8 @@ export interface GameEvent {
   optionA: { label: string; effect: string };
   optionB: { label: string; effect: string };
 }
+
+// ─── Player & Run State ─────────────────────────────────────
 
 export interface PlayerState {
   hp: number;
@@ -191,6 +222,8 @@ export interface RunProgress {
   diceHistory: number[];
   totalFloorsCleared: number;
 }
+
+// ─── Village Meta ───────────────────────────────────────────
 
 export interface VillageMeta {
   level: number;
@@ -222,6 +255,17 @@ export interface Villager {
   recruitFaith: number;
   specialty: string;
 }
+
+// ─── Combat Embedding State ─────────────────────────────────
+
+/** Tracks which die is embedded in which equipment slot during combat */
+export interface EmbeddedSlot {
+  equipmentSlotId: string;
+  socketType: SocketType;
+  embeddedDie: DiceEntity | null;
+}
+
+// ─── Damage Result ──────────────────────────────────────────
 
 export interface DamageResult {
   rawDamage: number;

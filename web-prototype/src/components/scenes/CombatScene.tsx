@@ -4,37 +4,33 @@ import { useCombatStore } from '../../stores/useCombatStore';
 import { DiceAllocationPanel } from '../ui/DiceAllocationPanel';
 import { RewardModal } from '../ui/RewardModal';
 import { PixelButton } from '../common/PixelButton';
-import { WEAPONS } from '../../data/weapons';
 import { generateRewards } from '../../services/rewardService';
 import type { RewardOption } from '../../types/game';
 
 const INTENT_ICONS: Record<string, string> = {
-  attack: '⚔️',
-  block: '🛡️',
-  summon: '👥',
-  curse: '💀',
-  buff: '✨',
+  attack: '⚔️', block: '🛡️', summon: '👥', curse: '💀', buff: '✨',
 };
 
 const INTENT_LABELS: Record<string, string> = {
-  attack: '攻击',
-  block: '防御',
-  summon: '召唤',
-  curse: '诅咒',
-  buff: '强化',
+  attack: '攻击', block: '防御', summon: '召唤', curse: '诅咒', buff: '强化',
 };
 
 export const CombatScene: React.FC = () => {
   const game = useGameStore();
   const combat = useCombatStore();
   const [rewards, setRewards] = useState<RewardOption[] | null>(null);
-  const [weaponModalOpen, setWeaponModalOpen] = useState(false);
 
   const handleVictory = () => {
     if (!rewards) {
       const r = generateRewards(game.run.floor, false);
       setRewards(r);
       return;
+    }
+    // Return embedded dice to dice box
+    for (const slot of combat.embeddedSlots) {
+      if (slot.embeddedDie) {
+        game.addDice(slot.embeddedDie);
+      }
     }
     combat.resetCombat();
     setRewards(null);
@@ -46,8 +42,30 @@ export const CombatScene: React.FC = () => {
     }
   };
 
-  const handleRewardPick = () => {
+  const handleRewardPick = (reward: RewardOption) => {
+    if (reward.type === 'dice' && reward.dice) {
+      game.addDice(reward.dice);
+    } else if (reward.type === 'equipment' && reward.equipment) {
+      game.addToBackpack(reward.equipment);
+    } else if (reward.type === 'gold' && reward.gold) {
+      game.addGold(reward.gold);
+    } else if (reward.type === 'item' && reward.item) {
+      game.addItem(reward.item);
+    } else if (reward.type === 'relic' && reward.relic) {
+      game.addRelic(reward.relic);
+    } else if (reward.type === 'restore' && reward.restore) {
+      if (reward.restore.hp) game.heal(reward.restore.hp);
+      if (reward.restore.faith) game.addFaith(reward.restore.faith);
+      if (reward.restore.curse) game.addCurse(-reward.restore.curse);
+    }
+
     setRewards(null);
+    // Return embedded dice
+    for (const slot of combat.embeddedSlots) {
+      if (slot.embeddedDie) {
+        game.addDice(slot.embeddedDie);
+      }
+    }
     combat.resetCombat();
     if (game.run.floor >= 10) {
       game.resetGame();
@@ -63,35 +81,22 @@ export const CombatScene: React.FC = () => {
     game.setScene('board');
   };
 
-  const handleSwitchWeapon = (weaponId: string) => {
-    const weapon = WEAPONS.find(w => w.id === weaponId);
-    if (weapon) {
-      // Update dice slots with new weapon
-      combat.startCombat(game.run.floor);
-    }
-    setWeaponModalOpen(false);
-  };
-
-  const isAllocating = combat.turnPhase === 'allocate';
-  const canReroll = combat.rerollsLeft > 0 && isAllocating;
+  const isEmbedding = combat.phase === 'embedding';
+  const isCombat = combat.phase === 'combat';
 
   return (
     <div className="flex flex-col gap-3 p-4 max-w-4xl mx-auto">
-      {/* Combat header */}
+      {/* Header */}
       <div className="flex items-center justify-between bg-house-green text-white px-4 py-2 rounded-card flex-wrap gap-2">
-        <div className="text-sm font-semibold">⚔️ 战斗中 — 骰子分配</div>
-        <div className="text-sm">
-          武器: <span className="font-bold text-gold">{combat.currentWeapon?.name || '无'}</span>
+        <div className="text-sm font-semibold">
+          {isEmbedding ? '🔮 骰子嵌入阶段' : isCombat ? '⚔️ 战斗中' : '⚔️ 战斗结束'}
         </div>
-        <button
-          onClick={() => setWeaponModalOpen(true)}
-          className="text-xs py-1 px-3 bg-ceramic text-house-green rounded font-semibold hover:bg-gold transition"
-        >
-          切换武器
-        </button>
+        <div className="text-sm">
+          骰子匣: <span className="font-bold text-gold">{game.diceBox.length}/{game.maxDiceBoxSlots}</span>
+        </div>
       </div>
 
-      {/* Battlefield: Player + Enemies */}
+      {/* Battlefield */}
       <div className="flex flex-row items-start justify-center gap-3 flex-wrap">
         {/* Player card */}
         <div className="bg-ceramic rounded-card p-3 border-2 border-accent-green/40 w-36 flex flex-col items-center">
@@ -109,7 +114,7 @@ export const CombatScene: React.FC = () => {
           <div className="flex gap-2 mt-2 text-[10px] text-text-soft flex-wrap justify-center">
             <span>🛡️{game.player.armor}</span>
             <span>✝️{game.player.faith}</span>
-            <span>🎲{combat.maxDice}</span>
+            <span>🎲{game.diceBox.length}</span>
           </div>
         </div>
 
@@ -142,7 +147,6 @@ export const CombatScene: React.FC = () => {
               <div className="text-[10px] text-text-soft mt-0.5">
                 {Math.max(0, enemy.hp)}/{enemy.maxHp}
               </div>
-              {/* Intent display */}
               <div className="flex gap-2 mt-2 text-xs font-semibold">
                 {enemy.armor > 0 && <span>🛡️{enemy.armor}</span>}
                 <span className="px-2 py-0.5 rounded" style={{
@@ -159,92 +163,64 @@ export const CombatScene: React.FC = () => {
         })}
       </div>
 
-      {/* Dice Pool */}
-      <div className="bg-ceramic rounded-card p-3 border-2 border-gold/20">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-bold text-house-green">
-            🎲 骰子池
-            {combat.selectedDieIndex !== null && (
-              <span className="text-gold text-xs ml-2 animate-pulse">已选中 #{combat.selectedDieIndex + 1}</span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={combat.rerollUnallocated}
-              disabled={!canReroll}
-              className={`text-xs py-1 px-3 rounded font-semibold transition ${
-                canReroll
-                  ? 'bg-gold text-white hover:bg-gold/80'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              🔄 重投 ({combat.rerollsLeft})
-            </button>
-            <button
-              onClick={combat.commitTurn}
-              disabled={!isAllocating}
-              className="text-xs py-1 px-4 bg-accent-green text-white rounded font-semibold hover:bg-starbucks-green transition"
-            >
-              ⚡ 执行行动
-            </button>
-          </div>
-        </div>
-        <div className="flex gap-3 justify-center flex-wrap">
-          {combat.battleDice.map((die, idx) => (
-            <button
-              key={idx}
-              onClick={() => combat.selectDie(idx)}
-              disabled={die.allocated}
-              className={`
-                w-14 h-14 rounded-xl text-2xl font-bold font-mono transition-all duration-150
-                flex flex-col items-center justify-center
-                ${die.allocated
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed border-2 border-gray-300'
-                  : combat.selectedDieIndex === idx
-                    ? 'bg-gold text-white scale-110 shadow-lg border-2 border-gold'
-                    : 'bg-white text-house-green border-2 border-house-green/30 hover:border-gold hover:scale-105 cursor-pointer'
-                }
-              `}
-            >
-              <span>{die.value}</span>
-              {die.allocated && (
-                <span className="text-[8px] text-gray-400">已分配</span>
-              )}
-            </button>
-          ))}
-          {combat.battleDice.length === 0 && (
-            <div className="text-text-soft italic text-sm py-4">等待投骰...</div>
-          )}
-        </div>
-        {isAllocating && (
-          <div className="text-center text-xs text-text-soft mt-2">
-            点击骰子选中 → 点击技能槽分配 → 点击「执行行动」
-          </div>
-        )}
-      </div>
-
-      {/* Dice Allocation Panel */}
-      {isAllocating && !combat.combatEnded && (
+      {/* Embedding Phase */}
+      {isEmbedding && (
         <DiceAllocationPanel
-          diceSlots={combat.diceSlots}
-          allocations={combat.allocations}
-          battleDice={combat.battleDice}
-          onAllocate={combat.allocateDie}
-          onUnallocate={combat.unallocateDie}
+          availableDice={combat.availableDice}
+          embeddedSlots={combat.embeddedSlots}
+          equippedItems={combat.equippedItems}
+          onEmbed={combat.embedDie}
+          onUnembed={combat.unembedDie}
           playerFaith={game.player.faith}
+          onConfirm={combat.confirmEmbedding}
         />
       )}
 
-      {!isAllocating && !combat.combatEnded && combat.turnPhase === 'execute' && (
-        <div className="text-center text-sm text-text-soft py-2 animate-pulse">
-          结算中...
+      {/* Combat Phase Actions */}
+      {isCombat && (
+        <div className="bg-ceramic rounded-card p-3 border-2 border-gold/20">
+          <div className="text-sm font-bold text-house-green mb-3">
+            ⚡ 行动选择
+          </div>
+
+          {/* Embedded dice summary */}
+          <div className="flex gap-2 flex-wrap mb-3">
+            {combat.embeddedSlots.filter(s => s.embeddedDie).map(slot => {
+              const item = combat.equippedItems.find(e => e.slot === slot.equipmentSlotId);
+              return (
+                <div key={slot.equipmentSlotId} className="bg-house-green/5 px-2 py-1 rounded text-xs">
+                  <span className="text-text-soft">{item?.name || slot.equipmentSlotId}: </span>
+                  <span className="font-bold text-gold font-mono">D{slot.embeddedDie!.faces}</span>
+                  <span className="text-text-soft"> {slot.embeddedDie!.name}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex gap-2 flex-wrap justify-center">
+            <PixelButton variant="primary" onClick={() => combat.playerAttack(0)}>
+              ⚔️ 攻击
+            </PixelButton>
+            <PixelButton variant="secondary" onClick={combat.playerDefend}>
+              🛡️ 防御
+            </PixelButton>
+            <PixelButton variant="secondary" onClick={combat.playerSkill}>
+              ✨ 神判之刃
+            </PixelButton>
+            <PixelButton variant="secondary" onClick={() => {
+              const firstItem = game.items[0];
+              if (firstItem) combat.playerUseItem(firstItem.id);
+            }}>
+              🧪 道具
+            </PixelButton>
+          </div>
         </div>
       )}
 
       {/* Combat log */}
-      <div className="bg-black/5 rounded-card p-3 h-24 overflow-y-auto text-xs space-y-1 border border-house-green/10">
-        {combat.combatLog.slice(-15).map((log, i) => (
-          <div key={i} className={`text-text-black ${log.includes('暴击') ? 'text-danger font-bold' : ''} ${log.includes('→') || log.includes('→') ? 'pl-2 border-l-2 border-gold/30' : ''}`}>
+      <div className="bg-black/5 rounded-card p-3 h-28 overflow-y-auto text-xs space-y-1 border border-house-green/10">
+        {combat.combatLog.slice(-20).map((log, i) => (
+          <div key={i} className={`text-text-black ${log.includes('暴击') ? 'text-danger font-bold' : ''} ${log.includes('→') ? 'pl-2 border-l-2 border-gold/30' : ''}`}>
             {log}
           </div>
         ))}
@@ -262,46 +238,13 @@ export const CombatScene: React.FC = () => {
         </div>
       )}
 
-      {/* Weapon switch modal */}
-      {weaponModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-parchment scroll-paper p-6 rounded-card max-w-sm w-full">
-            <h3 className="text-lg font-bold text-house-green mb-4">切换武器</h3>
-            <p className="text-xs text-text-soft mb-3">切换武器后将重新开始战斗</p>
-            <div className="grid grid-cols-2 gap-2">
-              {WEAPONS.map(weapon => (
-                <button
-                  key={weapon.id}
-                  onClick={() => handleSwitchWeapon(weapon.id)}
-                  disabled={combat.currentWeapon?.id === weapon.id}
-                  className={`p-2 rounded-card border-2 text-left text-xs transition ${
-                    combat.currentWeapon?.id === weapon.id
-                      ? 'bg-light-green/30 border-accent-green'
-                      : 'bg-white border-house-green/20 hover:border-house-green/40'
-                  }`}
-                >
-                  <div className="font-bold text-house-green">{weapon.name}</div>
-                  <div className="text-text-soft">需求: {weapon.diceRequirement.label}</div>
-                  <div className="text-text-soft">{weapon.description}</div>
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-center">
-              <PixelButton variant="secondary" onClick={() => setWeaponModalOpen(false)}>
-                取消
-              </PixelButton>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Reward Modal */}
       {rewards && (
         <RewardModal rewards={rewards} onClose={handleRewardPick} />
       )}
 
       {/* Combat ended overlay */}
-      {combat.combatEnded && !rewards && (
+      {combat.phase === 'ended' && !rewards && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-parchment scroll-paper p-8 rounded-card text-center max-w-sm">
             {combat.victory ? (
@@ -310,7 +253,7 @@ export const CombatScene: React.FC = () => {
                 <h2 className="text-2xl font-bold text-accent-green mb-2">战斗胜利！</h2>
                 <p className="text-sm text-text-soft mb-4">敌人已被击败</p>
                 <PixelButton variant="gold" onClick={handleVictory}>
-                  继续
+                  查看奖励
                 </PixelButton>
               </>
             ) : (

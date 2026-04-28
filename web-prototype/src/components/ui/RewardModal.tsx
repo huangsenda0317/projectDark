@@ -1,12 +1,18 @@
 import React from 'react';
 import type { RewardOption } from '../../types/game';
 import { useGameStore } from '../../stores/useGameStore';
-import { PixelButton } from '../common/PixelButton';
 
 interface RewardModalProps {
   rewards: RewardOption[];
-  onClose: () => void;
+  onClose: (reward: RewardOption) => void;
 }
+
+const QUALITY_COLORS: Record<string, string> = {
+  common: 'border-gray-300',
+  fine: 'border-blue-400',
+  rare: 'border-purple-400',
+  legendary: 'border-yellow-400',
+};
 
 export const RewardModal: React.FC<RewardModalProps> = ({ rewards, onClose }) => {
   const game = useGameStore();
@@ -22,6 +28,9 @@ export const RewardModal: React.FC<RewardModalProps> = ({ rewards, onClose }) =>
       case 'gold':
         if (reward.gold) game.addGold(reward.gold);
         break;
+      case 'dice':
+        if (reward.dice) game.addDice(reward.dice);
+        break;
       case 'restore':
         if (reward.restore) {
           if (reward.restore.hp) game.heal(reward.restore.hp);
@@ -33,7 +42,7 @@ export const RewardModal: React.FC<RewardModalProps> = ({ rewards, onClose }) =>
         if (reward.relic) game.addRelic(reward.relic);
         break;
     }
-    onClose();
+    onClose(reward);
   };
 
   return (
@@ -47,7 +56,11 @@ export const RewardModal: React.FC<RewardModalProps> = ({ rewards, onClose }) =>
             <button
               key={reward.id}
               onClick={() => handlePick(reward)}
-              className="bg-white border-2 border-house-green/20 rounded-card p-4 text-center hover:border-gold hover:shadow-lg transition-all hover:-translate-y-1"
+              className={`bg-white border-2 rounded-card p-4 text-center hover:border-gold hover:shadow-lg transition-all hover:-translate-y-1 ${
+                reward.type === 'dice' && reward.dice
+                  ? QUALITY_COLORS[reward.dice.quality]
+                  : 'border-house-green/20'
+              }`}
             >
               <div className="text-4xl mb-2">{reward.icon}</div>
               <div className="text-sm font-bold text-house-green leading-tight">{reward.label}</div>
@@ -55,6 +68,14 @@ export const RewardModal: React.FC<RewardModalProps> = ({ rewards, onClose }) =>
                 {reward.type === 'item' && reward.item && reward.item.description}
                 {reward.type === 'equipment' && reward.equipment && reward.equipment.description}
                 {reward.type === 'gold' && '即时获得'}
+                {reward.type === 'dice' && reward.dice && (
+                  <>
+                    <div>D{reward.dice.faces} · {reward.dice.affixes.length} 词条</div>
+                    {reward.dice.affixes.map((a, i) => (
+                      <div key={i} className="text-[9px]">{a.name}: {a.effect}</div>
+                    ))}
+                  </>
+                )}
                 {reward.type === 'restore' && '即时恢复'}
                 {reward.type === 'relic' && reward.relic && reward.relic.description}
               </div>

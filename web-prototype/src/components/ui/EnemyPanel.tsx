@@ -22,7 +22,7 @@ const INTENT_LABELS: Record<string, string> = {
   buff: '强化',
 };
 
-export const EnemyPanel: React.FC<EnemyPanelProps> = ({ enemy, index }) => {
+export const EnemyPanel: React.FC<EnemyPanelProps> = ({ enemy, index: _index }) => {
   const hpPercent = Math.max(0, (enemy.hp / enemy.maxHp) * 100);
 
   return (

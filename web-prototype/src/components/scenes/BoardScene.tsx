@@ -5,7 +5,7 @@ import { CircularBoard } from '../ui/CircularBoard';
 import { DiceRoller } from '../ui/DiceRoller';
 import { PixelButton } from '../common/PixelButton';
 import { EventModal } from '../ui/EventModal';
-import type { CellType } from '../../types/game';
+import type { CellType, DiceEntity } from '../../types/game';
 
 export const BoardScene: React.FC = () => {
   const game = useGameStore();
@@ -16,11 +16,31 @@ export const BoardScene: React.FC = () => {
   useEffect(() => {
     if (board.cells.length === 0) {
       board.generateBoard(game.run.floor);
+      game.getFallbackDice();
     }
   }, [game.run.floor]);
 
+  // Enable rolling when a die is selected and no result pending
+  useEffect(() => {
+    if (board.selectedDie && board.diceResult === null && !board.isMoving) {
+      board.setCanRoll(true);
+    }
+  }, [board.selectedDie, board.diceResult, board.isMoving]);
+
+  const handleSelectDie = (die: DiceEntity | null) => {
+    board.selectDie(die);
+    if (die) {
+      game.setSelectedMovementDie(die.id);
+    } else {
+      game.setSelectedMovementDie(null);
+    }
+  };
+
   const handleRoll = () => {
+    board.clearMoveError();
     const roll = board.rollDice();
+    if (roll === null) return;
+
     game.addDiceHistory(roll);
 
     const count = board.cells.length;
@@ -46,12 +66,10 @@ export const BoardScene: React.FC = () => {
     handleCellTrigger(cell.type, index);
   };
 
-  const handleCellTrigger = (type: CellType, index: number) => {
+  const handleCellTrigger = (type: CellType, _index: number) => {
     switch (type) {
       case 'combat':
       case 'elite':
-        game.setScene('combat');
-        break;
       case 'boss':
         game.setScene('combat');
         break;
@@ -91,10 +109,10 @@ export const BoardScene: React.FC = () => {
   };
 
   const handleReturnToCenter = () => {
-    if (!board.canRoll) return;
-    // Show interlude after completing a circuit
     game.setScene('interlude');
   };
+
+  const selectedDie = board.selectedDie;
 
   return (
     <div className="flex flex-col items-center gap-4 p-4 max-w-2xl mx-auto">
@@ -118,9 +136,13 @@ export const BoardScene: React.FC = () => {
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-center gap-4 w-full">
         <DiceRoller
+          diceBox={game.diceBox}
+          selectedDie={selectedDie}
+          onSelectDie={handleSelectDie}
           canRoll={board.canRoll}
           onRoll={handleRoll}
           diceResult={board.diceResult}
+          error={board.moveError}
         />
 
         {board.diceResult && (
@@ -139,10 +161,10 @@ export const BoardScene: React.FC = () => {
         )}
       </div>
 
-      {/* Return to center / Next floor */}
+      {/* Floor & Navigation */}
       <div className="flex gap-3">
         <PixelButton variant="gold" onClick={handleReturnToCenter}>
-          回到中心 / 层间结算
+          层间结算 (第{game.run.floor}层)
         </PixelButton>
         <PixelButton variant="secondary" onClick={() => game.setScene('village')}>
           回村

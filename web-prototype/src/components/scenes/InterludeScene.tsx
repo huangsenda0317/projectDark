@@ -3,14 +3,16 @@ import { useGameStore } from '../../stores/useGameStore';
 import { useBoardStore } from '../../stores/useBoardStore';
 import { EQUIPMENT_ITEMS } from '../../data/equipmentSets';
 import { getRandomRelic } from '../../data/relics';
+import { generateRandomDice } from '../../data/dice';
 import { PixelButton } from '../common/PixelButton';
-import type { EquipmentItem, Relic } from '../../types/game';
+import type { EquipmentItem, Relic, DiceEntity } from '../../types/game';
 
 export const InterludeScene: React.FC = () => {
   const game = useGameStore();
   const board = useBoardStore();
   const [selectedEquip, setSelectedEquip] = useState<EquipmentItem | null>(null);
   const [selectedRelic, setSelectedRelic] = useState<Relic | null>(null);
+  const [selectedDice, setSelectedDice] = useState<DiceEntity | null>(null);
   const [purified, setPurified] = useState(false);
 
   const equipRewards = React.useMemo(() => {
@@ -20,6 +22,10 @@ export const InterludeScene: React.FC = () => {
 
   const relicRewards = React.useMemo(() => {
     return [getRandomRelic(), getRandomRelic()];
+  }, [game.run.floor]);
+
+  const diceRewards = React.useMemo(() => {
+    return [generateRandomDice(game.run.floor), generateRandomDice(game.run.floor)];
   }, [game.run.floor]);
 
   const handlePickEquip = (equip: EquipmentItem) => {
@@ -32,6 +38,15 @@ export const InterludeScene: React.FC = () => {
     if (selectedRelic) return;
     setSelectedRelic(relic);
     game.addRelic(relic);
+  };
+
+  const handlePickDice = (dice: DiceEntity) => {
+    if (selectedDice) return;
+    if (!game.addDice(dice)) {
+      alert('骰子匣已满！');
+      return;
+    }
+    setSelectedDice(dice);
   };
 
   const handlePurify = () => {
@@ -63,6 +78,30 @@ export const InterludeScene: React.FC = () => {
       <div className="bg-house-green text-white rounded-card p-4 text-center">
         <h1 className="text-2xl font-bold font-gothic">层间神坛</h1>
         <p className="text-sm text-white/70 mt-1">第 {game.run.floor} 层已完成</p>
+      </div>
+
+      {/* Dice reward (NEW per GDD v0.3) */}
+      <div className="bg-ceramic rounded-card p-4 border border-house-green/20">
+        <h2 className="text-lg font-bold text-house-green mb-3">🎲 选择一枚骰子</h2>
+        <div className="flex justify-center gap-3 flex-wrap">
+          {diceRewards.map(dice => (
+            <button key={dice.id} onClick={() => handlePickDice(dice)} disabled={!!selectedDice}
+              className={`p-3 rounded-card border-2 text-left min-w-[140px] transition-all ${
+                selectedDice?.id === dice.id ? 'border-gold scale-105 shadow-lg bg-gold-lightest' : 'border-house-green/20 bg-white hover:border-house-green/40'
+              } ${selectedDice && selectedDice.id !== dice.id ? 'opacity-40' : ''}`}>
+              <div className="text-sm font-bold text-house-green">{dice.name}</div>
+              <div className="text-xs text-text-soft">面数: D{dice.faces}</div>
+              <div className="text-xs mt-1">
+                {dice.affixes.map((a, i) => (
+                  <div key={i} className="text-[9px] text-text-soft">{a.name}: {a.effect}</div>
+                ))}
+              </div>
+            </button>
+          ))}
+        </div>
+        <div className="text-xs text-text-soft mt-2 text-center">
+          骰子匣: {game.diceBox.length}/{game.maxDiceBoxSlots}
+        </div>
       </div>
 
       {/* Equipment reward */}

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
-import { useBoardStore } from '../../stores/useBoardStore';
 import { getRandomEvent } from '../../data/events';
 import { PixelButton } from '../common/PixelButton';
 
@@ -10,7 +9,6 @@ interface EventModalProps {
 
 export const EventModal: React.FC<EventModalProps> = ({ onClose }) => {
   const game = useGameStore();
-  const board = useBoardStore();
   const [resolved, setResolved] = useState(false);
   const [result, setResult] = useState('');
 

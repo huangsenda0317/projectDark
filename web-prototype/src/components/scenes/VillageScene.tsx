@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { PixelButton } from '../common/PixelButton';
-import type { Building, Villager, EquipmentItem } from '../../types/game';
+import type { Building, Villager } from '../../types/game';
 
 export const VillageScene: React.FC = () => {
   const game = useGameStore();

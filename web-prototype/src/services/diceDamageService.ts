@@ -1,28 +1,36 @@
-/** Elona-style dice damage calculation service */
+/** Elona-style dice damage calculation — updated for embedding system (GDD v0.3) */
 
-import type { DamageFormula, DamageResult, Stats } from '../types/game';
+import type { DamageFormula, DamageResult, Stats, Weapon, DiceEntity } from '../types/game';
 
-/**
- * Roll a single die with `faces` sides.
- */
 function rollDie(faces: number): number {
   return Math.floor(Math.random() * faces) + 1;
 }
 
 /**
- * Apply stat bonuses to a base formula.
- *
- * | Stat | Effect |
- * |------|--------|
- * | STR (每5点) | flatBonus Z +1 |
- * | INT (每5点) | diceFaces Y +1 |
- * | AGI (每8点) | battle dice pool +1 (handled in weapons.ts) |
- * | AGI (每10点) | critChance C +1% |
- * | FAI (每3点) | diceCount X +1 (max +3) |
+ * Build the final damage formula from a weapon + embedded die + player stats.
+ * GDD section 9.4: XdY+Z(C)[±R] where Y = embedded die faces.
+ */
+export function buildEmbeddedFormula(
+  weapon: Weapon,
+  embeddedDie: DiceEntity,
+  stats: Stats
+): DamageFormula {
+  const socket = weapon.diceSocket;
+  return {
+    diceCount: weapon.baseFormula.diceCount + Math.min(2, Math.floor(stats.fai / 5)),
+    diceFaces: embeddedDie.faces * socket.faceMultiplier,
+    flatBonus: socket.flatBonus + Math.floor(stats.str / 5),
+    critChance: weapon.baseFormula.critChance + socket.critBonus + Math.floor(stats.agi / 10),
+    variance: weapon.baseFormula.variance + socket.varianceBonus,
+  };
+}
+
+/**
+ * Apply stat bonuses to a generic formula (kept for backwards compat and non-weapon skills).
  */
 export function applyStatBonuses(formula: DamageFormula, stats: Stats): DamageFormula {
   return {
-    diceCount: formula.diceCount + Math.min(3, Math.floor(stats.fai / 3)),
+    diceCount: formula.diceCount + Math.min(2, Math.floor(stats.fai / 5)),
     diceFaces: formula.diceFaces + Math.floor(stats.int / 5),
     flatBonus: formula.flatBonus + Math.floor(stats.str / 5),
     critChance: formula.critChance + Math.floor(stats.agi / 10),
@@ -32,14 +40,6 @@ export function applyStatBonuses(formula: DamageFormula, stats: Stats): DamageFo
 
 /**
  * Calculate damage using the Elona formula: XdY+Z(C)[+-R]
- *
- * Steps:
- * 1. Roll X dice of Y faces, sum them
- * 2. Add flat bonus Z
- * 3. Crit check: roll 1-100, if <= C then damage * 2
- * 4. Apply variance [-R, +R]
- * 5. Subtract target armor
- * 6. Clamp to minimum 0 (or 1 if piercing)
  */
 export function calculateDamage(
   formula: DamageFormula,
@@ -60,7 +60,7 @@ export function calculateDamage(
     diceSum += r;
   }
 
-  // Step 2: Add flat bonus (including board dice if linked)
+  // Step 2: Add flat bonus
   let flat = formula.flatBonus;
   if (boardDiceRoll !== null) {
     flat += boardDiceRoll;
@@ -83,12 +83,12 @@ export function calculateDamage(
 
   // Build breakdown string
   const rollStr = rolls.join('+');
-  const critStr = isCrit ? ` (暴击! ×2)` : '';
+  const critStr = isCrit ? ' (暴击! ×2)' : '';
   const varStr = varianceRoll !== 0 ? `${varianceRoll > 0 ? '+' : ''}${varianceRoll}` : '';
   const armorStr = armorBlocked > 0 ? ` - 护甲${armorBlocked}` : '';
   const boardStr = boardDiceRoll !== null ? `(+棋盘骰子${boardDiceRoll})` : '';
 
-  const breakdown = `${formula.diceCount}d${formula.diceFaces}=(${rollStr})=${diceSum}${flat > 0 ? `+${flat}${boardStr}` : ''}${critStr}${varStr}${armorStr} = ${damageDealt}点伤害`;
+  const breakdown = `${formula.diceCount}d${formula.diceFaces}=(${rollStr})=${diceSum}+${flat}${boardStr}${critStr}${varStr}${armorStr} = ${damageDealt}点伤害`;
 
   return {
     rawDamage,
@@ -101,17 +101,10 @@ export function calculateDamage(
   };
 }
 
-/**
- * Format a DamageFormula into human-readable string.
- */
 export function formatFormula(f: DamageFormula): string {
   return `${f.diceCount}d${f.diceFaces}+${f.flatBonus}(${f.critChance}%)[±${f.variance}]`;
 }
 
-/**
- * Create a formula from a shorthand string like "2d6+3(5)[-2,2]"
- * (Optional utility for future data-driven loading)
- */
 export function parseFormula(shorthand: string): DamageFormula | null {
   const match = shorthand.match(/(\d+)d(\d+)\+(-?\d+)\((\d+)\)\[(-?\d+),(-?\d+)\]/);
   if (!match) return null;
