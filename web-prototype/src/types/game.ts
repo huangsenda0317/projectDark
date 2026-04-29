@@ -63,6 +63,10 @@ export interface DiceEntity {
   faces: DiceFaceCount;
   affixes: DiceAffix[];
   canMove: boolean; // D100 cannot be used for movement
+  /** Wear value 0-100, accumulates during combat when embedded */
+  wear: number;
+  /** When wear >= 100, affixes disabled and embed effects invalid, but can still move */
+  shattered: boolean;
 }
 
 // ─── Dice Socket (Equipment embedding) ──────────────────────
@@ -207,8 +211,7 @@ export interface PlayerState {
   maxHp: number;
   armor: number;
   stats: Stats;
-  faith: number;
-  maxFaith: number;
+  faith: number; // GDD v0.4.1: no upper limit
   gold: number;
   curseLevel: number;
   encumbrance: number;
@@ -229,31 +232,8 @@ export interface VillageMeta {
   level: number;
   name: string;
   population: number;
-  taxPerRun: number;
   faithReserve: number;
-  buildings: Building[];
-  villagers: Villager[];
   storedItems: EquipmentItem[];
-}
-
-export interface Building {
-  id: string;
-  name: string;
-  unlocked: boolean;
-  built: boolean;
-  costGold: number;
-  costFaith: number;
-  costResources: number;
-  effect: string;
-}
-
-export interface Villager {
-  id: string;
-  name: string;
-  profession: string;
-  recruited: boolean;
-  recruitFaith: number;
-  specialty: string;
 }
 
 // ─── Combat Embedding State ─────────────────────────────────

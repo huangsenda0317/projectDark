@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { PlayerState, RunProgress, VillageMeta, SceneType, EquipmentItem, Item, Relic, DiceEntity } from '../types/game';
-import { INITIAL_PLAYER_DICE, FALLBACK_D4 } from '../data/dice';
+import { INITIAL_PLAYER_DICE_SET, FALLBACK_D4 } from '../data/dice';
 import { calculateMaxEncumbrance, calculateTotalWeight } from '../services/encumbranceService';
 
 interface GameState {
@@ -49,7 +49,6 @@ interface GameState {
   removeRelic: (relicId: string) => void;
   // Meta
   addFaithTag: (tag: string) => void;
-  contributeToVillage: (gold: number, faith: number) => void;
   startNewRun: () => void;
   resetGame: () => void;
   setShowRewardModal: (v: boolean) => void;
@@ -57,11 +56,11 @@ interface GameState {
 }
 
 const INITIAL_PLAYER: PlayerState = {
-  hp: 60, maxHp: 60, armor: 0,
-  stats: { str: 5, agi: 5, int: 5, con: 5, fai: 5 },
-  faith: 5, maxFaith: 20, gold: 50,
+  hp: 45, maxHp: 45, armor: 0,
+  stats: { str: 3, agi: 3, int: 3, con: 3, fai: 3 },
+  faith: 10, gold: 50,
   curseLevel: 0, encumbrance: 0,
-  maxEncumbrance: calculateMaxEncumbrance(5),
+  maxEncumbrance: calculateMaxEncumbrance(3),
   faithTags: [],
 };
 
@@ -70,19 +69,7 @@ const INITIAL_RUN: RunProgress = {
 };
 
 const INITIAL_VILLAGE: VillageMeta = {
-  level: 1, name: '晨星村', population: 3, taxPerRun: 5, faithReserve: 0,
-  buildings: [
-    { id: 'house', name: '家', unlocked: true, built: true, costGold: 0, costFaith: 0, costResources: 0, effect: '基础住所' },
-    { id: 'prayer', name: '祈祷场', unlocked: true, built: true, costGold: 0, costFaith: 0, costResources: 0, effect: 'Run开始时+1信仰' },
-    { id: 'smithy', name: '铁匠铺', unlocked: false, built: false, costGold: 50, costFaith: 0, costResources: 30, effect: '每次Run出发时可强化1件装备' },
-    { id: 'market', name: '市场', unlocked: false, built: false, costGold: 30, costFaith: 0, costResources: 20, effect: '商店货物+2，价格-10%' },
-    { id: 'church', name: '教堂', unlocked: false, built: false, costGold: 0, costFaith: 30, costResources: 80, effect: '信仰上限+3，祈祷所效果×1.5' },
-  ],
-  villagers: [
-    { id: 'v1', name: '老汤姆', profession: '农民', recruited: true, recruitFaith: 5, specialty: '基础税收' },
-    { id: 'v2', name: '玛丽', profession: '农民', recruited: true, recruitFaith: 5, specialty: '基础税收' },
-    { id: 'v3', name: '小彼得', profession: '铁匠', recruited: false, recruitFaith: 10, specialty: '强化装备效果+1' },
-  ],
+  level: 1, name: '晨星村', population: 3, faithReserve: 0,
   storedItems: [],
 };
 
@@ -93,7 +80,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   village: { ...INITIAL_VILLAGE },
   equipped: [], backpack: [], dimensionalPouch: [],
   items: [], relics: [],
-  diceBox: [{ ...INITIAL_PLAYER_DICE }],
+  diceBox: INITIAL_PLAYER_DICE_SET.map(d => ({ ...d })),
   maxDiceBoxSlots: 2,
   selectedMovementDieId: null,
   showRewardModal: false, pendingRewards: null,
@@ -103,7 +90,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   updatePlayer: (partial) => set((s) => ({ player: { ...s.player, ...partial } })),
   addGold: (amount) => set((s) => ({ player: { ...s.player, gold: Math.max(0, s.player.gold + amount) } })),
   addFaith: (amount) => set((s) => ({
-    player: { ...s.player, faith: Math.max(0, Math.min(s.player.maxFaith, s.player.faith + amount)) },
+    player: { ...s.player, faith: Math.max(0, s.player.faith + amount) },
   })),
   consumeFaith: (amount) => {
     const state = get();
@@ -201,11 +188,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (s.player.faithTags.includes(tag as never)) return s;
     return { player: { ...s.player, faithTags: [...s.player.faithTags, tag as never] } };
   }),
-  contributeToVillage: (gold, faith) => set((s) => ({
-    player: { ...s.player, gold: s.player.gold - gold },
-    village: { ...s.village, faithReserve: s.village.faithReserve + faith },
-  })),
-
   // ─── Run Management ─────────────────────────────────────
 
   startNewRun: () => set((s) => ({
@@ -213,16 +195,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     player: {
       ...INITIAL_PLAYER,
       stats: s.player.stats,
-      maxHp: 60 + s.player.stats.con * 5,
-      hp: 60 + s.player.stats.con * 5,
-      maxFaith: 20 + (s.village.buildings.find(b => b.id === 'church')?.built ? 3 : 0),
-      faith: 5 + s.village.population,
-      gold: 50 + s.village.taxPerRun,
+      maxHp: 30 + s.player.stats.con * 5,
+      hp: 30 + s.player.stats.con * 5,
+      faith: 10,
+      gold: 50,
       maxEncumbrance: calculateMaxEncumbrance(s.player.stats.str),
     },
     run: { floor: 1, maxFloor: 10, diceHistory: [], totalFloorsCleared: s.run.totalFloorsCleared },
     equipped: [], backpack: [], dimensionalPouch: [], items: [], relics: [],
-    diceBox: [{ ...INITIAL_PLAYER_DICE }],
+    diceBox: INITIAL_PLAYER_DICE_SET.map(d => ({ ...d })),
     maxDiceBoxSlots: 2,
     selectedMovementDieId: null,
     visitedInterlude: false,
@@ -234,7 +215,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     village: { ...INITIAL_VILLAGE },
     equipped: [], backpack: [], dimensionalPouch: [],
     items: [], relics: [],
-    diceBox: [{ ...INITIAL_PLAYER_DICE }],
+    diceBox: INITIAL_PLAYER_DICE_SET.map(d => ({ ...d })),
     maxDiceBoxSlots: 2,
     selectedMovementDieId: null,
     showRewardModal: false, pendingRewards: null,

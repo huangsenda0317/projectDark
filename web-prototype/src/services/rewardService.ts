@@ -86,7 +86,7 @@ export function generateRewards(floor: number, isElite: boolean): RewardOption[]
             icon: '✨',
             restore: { curse: 2 + Math.floor(Math.random() * 3) },
           });
-        } else if (game.player.faith < game.player.maxFaith * 0.5 && Math.random() > 0.4) {
+        } else if (game.player.faith < 10 && Math.random() > 0.4) {
           options.push({
             id: 'restore-faith',
             type: 'restore',

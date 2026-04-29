@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { useBoardStore } from '../../stores/useBoardStore';
+import { useCombatStore } from '../../stores/useCombatStore';
 import { CircularBoard } from '../ui/CircularBoard';
 import { DiceRoller } from '../ui/DiceRoller';
 import { PixelButton } from '../common/PixelButton';
@@ -10,7 +11,14 @@ import type { CellType, DiceEntity } from '../../types/game';
 export const BoardScene: React.FC = () => {
   const game = useGameStore();
   const board = useBoardStore();
+  const combat = useCombatStore();
   const [message, setMessage] = useState('');
+
+  // Combine dice box + embedded dice for movement (GDD v0.4.1)
+  const embeddedDice = combat.embeddedSlots
+    .filter(s => s.embeddedDie && s.embeddedDie)
+    .map(s => s.embeddedDie!);
+  const allMovementDice = [...game.diceBox, ...embeddedDice];
 
   // Generate board on mount / floor change
   useEffect(() => {
@@ -136,7 +144,7 @@ export const BoardScene: React.FC = () => {
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-center gap-4 w-full">
         <DiceRoller
-          diceBox={game.diceBox}
+          diceBox={allMovementDice}
           selectedDie={selectedDie}
           onSelectDie={handleSelectDie}
           canRoll={board.canRoll}

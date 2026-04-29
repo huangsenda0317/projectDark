@@ -37,7 +37,7 @@ export const DiceAllocationPanel: React.FC<DiceEmbeddingPanelProps> = ({
 }) => {
   const totalFaithCost = embeddedSlots
     .filter(s => s.embeddedDie)
-    .reduce((sum, s) => sum + Math.floor(s.embeddedDie!.faces / 2), 0);
+    .reduce((sum, s) => sum + Math.floor(s.embeddedDie!.faces / 3), 0);
 
   const handleDieClick = (dieId: string) => {
     // Find first empty compatible slot
@@ -58,7 +58,7 @@ export const DiceAllocationPanel: React.FC<DiceEmbeddingPanelProps> = ({
       <div className="text-sm font-bold text-house-green">
         🔮 骰子嵌入阶段
         <span className="text-xs text-text-soft ml-2">
-          点击骰子嵌入装备槽 · 信仰消耗 = 面数÷2
+          点击骰子嵌入装备槽 · 信仰消耗 = 面数÷3
         </span>
       </div>
 
@@ -72,7 +72,7 @@ export const DiceAllocationPanel: React.FC<DiceEmbeddingPanelProps> = ({
         ) : (
           <div className="flex gap-2 flex-wrap">
             {availableDice.map(die => {
-              const faithCost = Math.floor(die.faces / 2);
+              const faithCost = Math.floor(die.faces / 3);
               const canAfford = playerFaith >= faithCost;
               return (
                 <button
@@ -103,6 +103,14 @@ export const DiceAllocationPanel: React.FC<DiceEmbeddingPanelProps> = ({
                       {a.name}
                     </span>
                   ))}
+                  {die.wear > 0 && (
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-0.5">
+                      <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${die.wear}%` }} />
+                    </div>
+                  )}
+                  {die.shattered && (
+                    <span className="text-[8px] text-red-500 mt-0.5">💔 破裂</span>
+                  )}
                 </button>
               );
             })}
@@ -140,8 +148,18 @@ export const DiceAllocationPanel: React.FC<DiceEmbeddingPanelProps> = ({
                   {item?.name || slot.equipmentSlotId}
                 </div>
                 {isOccupied ? (
-                  <div className="mt-1 text-xs font-mono text-gold">
-                    🔮 D{slot.embeddedDie!.faces} {slot.embeddedDie!.name}
+                  <div className="mt-1">
+                    <div className="text-xs font-mono text-gold">
+                      🔮 D{slot.embeddedDie!.faces} {slot.embeddedDie!.name}
+                    </div>
+                    {slot.embeddedDie!.wear > 0 && (
+                      <div className="w-full bg-gray-200 rounded-full h-1 mt-0.5">
+                        <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${slot.embeddedDie!.wear}%` }} />
+                      </div>
+                    )}
+                    {slot.embeddedDie!.shattered && (
+                      <span className="text-[8px] text-red-500">💔 破裂</span>
+                    )}
                   </div>
                 ) : (
                   <div className="mt-1 text-[10px] text-text-soft italic">空槽</div>

@@ -16,6 +16,9 @@ interface CombatState {
   combatLog: string[];
   victory: boolean;
   lastDamageResult: DamageResult | null;
+  // AP System (GDD v0.4.1)
+  currentAP: number;
+  maxAP: number;
   // Actions
   startCombat: (floor: number) => void;
   embedDie: (dieId: string, slotId: string) => void;
@@ -25,9 +28,11 @@ interface CombatState {
   playerDefend: () => void;
   playerSkill: () => void;
   playerUseItem: (itemId: string) => void;
+  endPlayerTurn: () => void;
   enemyAct: () => void;
   addCombatLog: (msg: string) => void;
   resetCombat: () => void;
+  resetCombatSoft: () => void;
 }
 
 /** Build embedded slots from equipped items */
@@ -50,6 +55,8 @@ export const useCombatStore = create<CombatState>((set, get) => ({
   combatLog: [],
   victory: false,
   lastDamageResult: null,
+  currentAP: 3,
+  maxAP: 3,
 
   startCombat: (floor) => {
     const game = useGameStore.getState();
@@ -76,6 +83,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       ],
       victory: false,
       lastDamageResult: null,
+      currentAP: 3,
     });
   },
 
@@ -93,8 +101,8 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       return;
     }
 
-    // Faith cost = floor(faces / 2)
-    const faithCost = Math.floor(die.faces / 2);
+    // Faith cost = floor(faces / 3) (GDD v0.4.1)
+    const faithCost = Math.floor(die.faces / 3);
     const game = useGameStore.getState();
     if (faithCost > 0 && !game.consumeFaith(faithCost)) {
       get().addCombatLog(`❌ 信仰不足！需要 ${faithCost} 点信仰`);
@@ -106,10 +114,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
     );
     const newDice = state.availableDice.filter(d => d.id !== dieId);
 
-    // Check for duplicate embed (half cost)
-    const halfCostMsg = faithCost > 0
-      ? `消耗 ${faithCost} 信仰` + (state.embeddedSlots.find(s => s.equipmentSlotId === slotId)?.embeddedDie ? '（半价）' : '')
-      : '';
+    const costMsg = faithCost > 0 ? `消耗 ${faithCost} 信仰` : '';
 
     set({
       availableDice: newDice,
@@ -117,7 +122,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
     });
 
     get().addCombatLog(
-      `🔮 ${die.name}(D${die.faces}) → 嵌入 ${slotId} ${faithCost > 0 ? halfCostMsg : ''}`
+      `🔮 ${die.name}(D${die.faces}) → 嵌入 ${slotId} ${faithCost > 0 ? costMsg : ''}`
     );
   },
 
@@ -149,7 +154,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
     const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
     const hasEmbedded = state.embeddedSlots.some(s => s.embeddedDie);
 
-    set({ phase: 'combat' });
+    set({ phase: 'combat', currentAP: 3 });
 
     if (hasEmbedded) {
       if (weaponSlot) {
@@ -168,6 +173,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
   playerAttack: (enemyIndex) => {
     const state = get();
     if (state.phase !== 'combat') return;
+    if (state.currentAP < 1) { get().addCombatLog('⚡ AP 不足！'); return; }
 
     const enemy = state.enemies[enemyIndex];
     if (!enemy || enemy.hp <= 0) {
@@ -179,6 +185,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
 
     // Find weapon slot with embedded die
     const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
+    const newAP = state.currentAP - 1;
 
     if (!weaponSlot) {
       // Bare hands: 1d4 + STR bonus
@@ -187,8 +194,8 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       enemy.hp -= result.damageDealt;
       enemy.armor = Math.max(0, enemy.armor - result.armorBlocked);
 
-      set({ lastDamageResult: result });
-      get().addCombatLog(`👊 徒手攻击 → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`);
+      set({ lastDamageResult: result, currentAP: newAP });
+      get().addCombatLog(`👊 徒手攻击 → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''} (AP-1)`);
     } else {
       const die = weaponSlot.embeddedDie!;
       const weaponItem = state.equippedItems.find(e => e.slot === weaponSlot.equipmentSlotId);
@@ -198,11 +205,13 @@ export const useCombatStore = create<CombatState>((set, get) => ({
 
       const formula = buildEmbeddedFormula(weapon, die, game.player.stats);
 
-      // Apply embed affix bonuses
-      for (const affix of die.affixes) {
-        if (affix.type === 'embed') {
-          if (affix.id === 'sharp') formula.critChance += 5;
-          if (affix.id === 'burning') formula.flatBonus += Math.floor(die.faces * 0.5);
+      // Apply embed affix bonuses (only if not shattered)
+      if (!die.shattered) {
+        for (const affix of die.affixes) {
+          if (affix.type === 'embed') {
+            if (affix.id === 'sharp') formula.critChance += 5;
+            if (affix.id === 'burning') formula.flatBonus += Math.floor(die.faces * 0.5);
+          }
         }
       }
 
@@ -210,20 +219,35 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       enemy.hp -= result.damageDealt;
       enemy.armor = Math.max(0, enemy.armor - result.armorBlocked);
 
-      // Lifesteal
-      for (const affix of die.affixes) {
-        if (affix.id === 'lifesteal') {
-          const healAmt = Math.floor(result.damageDealt * 0.1);
-          if (healAmt > 0) {
-            useGameStore.getState().heal(healAmt);
-            get().addCombatLog(`🩸 吸血恢复 ${healAmt} HP`);
+      // Lifesteal (only if not shattered)
+      if (!die.shattered) {
+        for (const affix of die.affixes) {
+          if (affix.id === 'lifesteal') {
+            const healAmt = Math.floor(result.damageDealt * 0.1);
+            if (healAmt > 0) {
+              useGameStore.getState().heal(healAmt);
+              get().addCombatLog(`🩸 吸血恢复 ${healAmt} HP`);
+            }
           }
         }
       }
 
-      set({ lastDamageResult: result });
+      // Wear accumulation (GDD v0.4.1)
+      const wearGain = 5 + Math.floor(Math.random() * 6);
+      die.wear = Math.min(100, die.wear + wearGain);
+      if (die.wear >= 100 && !die.shattered) {
+        die.shattered = true;
+        get().addCombatLog(`💔 ${die.name} 破裂了！词缀失效，嵌入效果无效`);
+      }
+
+      // Update embedded slot with modified die
+      const newSlots = state.embeddedSlots.map(s =>
+        s.equipmentSlotId === weaponSlot.equipmentSlotId ? { ...s, embeddedDie: { ...die } } : s
+      );
+
+      set({ lastDamageResult: result, currentAP: newAP, embeddedSlots: newSlots });
       get().addCombatLog(
-        `⚔️ ${weapon.name}(${formatFormula(formula)}) → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`
+        `⚔️ ${weapon.name}(${formatFormula(formula)}) → ${enemy.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''} [磨损:${die.wear}%] (AP-1)`
       );
 
       if (enemy.hp <= 0) {
@@ -240,21 +264,26 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       set({ phase: 'ended', victory: true });
     } else {
       set({ enemies: state.enemies.map(e => ({ ...e })) });
-      // Enemy turn
-      setTimeout(() => get().enemyAct(), 600);
+      // Auto enemy turn only when AP exhausted
+      if (newAP <= 0) {
+        setTimeout(() => get().enemyAct(), 500);
+      }
     }
   },
 
   playerDefend: () => {
     const state = get();
     if (state.phase !== 'combat') return;
+    if (state.currentAP < 1) { get().addCombatLog('⚡ AP 不足！'); return; }
 
     let shield = 3; // base shield
+    const newAP = state.currentAP - 1;
 
     // Add shield from armor embedded dice
     for (const slot of state.embeddedSlots) {
       if ((slot.socketType === 'armor' || slot.socketType === 'shield') && slot.embeddedDie) {
         const die = slot.embeddedDie;
+        if (die.shattered) continue; // shattered dice don't provide embed effects
         const multiplier = slot.socketType === 'shield' ? 2 : 1;
         shield += die.faces * multiplier;
 
@@ -269,16 +298,24 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       player: { ...s.player, armor: s.player.armor + shield },
     }));
 
-    get().addCombatLog(`🛡️ 防御！获得 ${shield} 点护甲`);
+    set({ currentAP: newAP });
+    get().addCombatLog(`🛡️ 防御！获得 ${shield} 点护甲 (AP-1)`);
+
+    if (newAP <= 0) {
+      setTimeout(() => get().enemyAct(), 500);
+    }
   },
 
   playerSkill: () => {
     const state = get();
     if (state.phase !== 'combat') return;
+    if (state.currentAP < 2) { get().addCombatLog('⚡ AP 不足！技能需要 2 AP'); return; }
 
+    const newAP = state.currentAP - 2;
     const game = useGameStore.getState();
     const weaponSlot = state.embeddedSlots.find(s => s.socketType === 'weapon' && s.embeddedDie);
-    const dieFaces = weaponSlot?.embeddedDie?.faces || 6;
+    const die = weaponSlot?.embeddedDie;
+    const dieFaces = die?.faces || 6;
 
     // Generic skill: 神判之刃 — uses board dice history
     const lastBoardDice = game.run.diceHistory[game.run.diceHistory.length - 1] || 0;
@@ -297,16 +334,32 @@ export const useCombatStore = create<CombatState>((set, get) => ({
     target.hp -= result.damageDealt;
     target.armor = Math.max(0, target.armor - result.armorBlocked);
 
-    set({ lastDamageResult: result });
+    set({ lastDamageResult: result, currentAP: newAP });
     get().addCombatLog(
-      `✨ 神判之刃(${formatFormula(formula)}) → ${target.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''}`
+      `✨ 神判之刃(${formatFormula(formula)}) → ${target.name} 受到 ${result.damageDealt} 点伤害！${result.isCrit ? '💥暴击！' : ''} (AP-2)`
     );
+
+    if (target.hp <= 0) get().addCombatLog(`${target.name} 被击败了！`);
+
+    // Check victory
+    const aliveEnemies = state.enemies.filter(e => e.hp > 0);
+    if (aliveEnemies.length === 0) {
+      const goldReward = 10 + game.run.floor * 2;
+      useGameStore.getState().addGold(goldReward);
+      get().addCombatLog(`🏆 战斗胜利！获得 ${goldReward} 金币！`);
+      set({ phase: 'ended', victory: true });
+    } else if (newAP <= 0) {
+      set({ enemies: state.enemies.map(e => ({ ...e })) });
+      setTimeout(() => get().enemyAct(), 500);
+    }
   },
 
   playerUseItem: (itemId) => {
     const state = get();
     if (state.phase !== 'combat') return;
+    if (state.currentAP < 1) { get().addCombatLog('⚡ AP 不足！'); return; }
 
+    const newAP = state.currentAP - 1;
     const game = useGameStore.getState();
     const item = game.items.find(i => i.id === itemId);
     if (!item) {
@@ -318,18 +371,30 @@ export const useCombatStore = create<CombatState>((set, get) => ({
 
     if (item.type === 'heal') {
       useGameStore.getState().heal(item.amount);
-      get().addCombatLog(`🧪 使用 ${item.name} → 回复 ${item.amount} HP`);
+      get().addCombatLog(`🧪 使用 ${item.name} → 回复 ${item.amount} HP (AP-1)`);
     } else if (item.type === 'attack') {
       const target = state.enemies.find(e => e.hp > 0);
       if (target) {
         target.hp -= item.amount;
-        get().addCombatLog(`💣 使用 ${item.name} → ${target.name} 受到 ${item.amount} 点伤害`);
+        get().addCombatLog(`💣 使用 ${item.name} → ${target.name} 受到 ${item.amount} 点伤害 (AP-1)`);
       }
     } else if (item.type === 'buff') {
-      get().addCombatLog(`✨ 使用 ${item.name} → ${item.effect}`);
+      get().addCombatLog(`✨ 使用 ${item.name} → ${item.effect} (AP-1)`);
     } else {
-      get().addCombatLog(`📜 使用 ${item.name}`);
+      get().addCombatLog(`📜 使用 ${item.name} (AP-1)`);
     }
+
+    set({ currentAP: newAP });
+    if (newAP <= 0) {
+      setTimeout(() => get().enemyAct(), 500);
+    }
+  },
+
+  endPlayerTurn: () => {
+    const state = get();
+    if (state.phase !== 'combat') return;
+    get().addCombatLog('⏳ 结束行动回合');
+    get().enemyAct();
   },
 
   enemyAct: () => {
@@ -381,6 +446,7 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       combatLog: [...s.combatLog, ...logs],
       phase: defeated ? 'ended' : 'combat',
       victory: false,
+      currentAP: defeated ? s.currentAP : 3, // Reset AP after enemy turn
     }));
   },
 
@@ -399,6 +465,20 @@ export const useCombatStore = create<CombatState>((set, get) => ({
       combatLog: [],
       victory: false,
       lastDamageResult: null,
+      currentAP: 3,
+    }),
+
+  /** Reset combat without clearing embedded slots (preserves embedding across scenes) */
+  resetCombatSoft: () =>
+    set({
+      phase: 'embedding',
+      availableDice: [],
+      equippedItems: [],
+      enemies: [],
+      combatLog: [],
+      victory: false,
+      lastDamageResult: null,
+      currentAP: 3,
     }),
 }));
 

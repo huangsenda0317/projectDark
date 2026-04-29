@@ -58,17 +58,18 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
               <button
                 key={die.id}
                 onClick={() => onSelectDie(isSelected ? null : die)}
-                disabled={!canRoll}
+                disabled={diceResult !== null}
                 className={`
                   relative w-16 h-20 rounded-xl border-2 transition-all duration-150
                   flex flex-col items-center justify-center gap-1
                   ${QUALITY_COLORS[die.quality]}
+                  ${die.shattered ? 'opacity-60 grayscale' : ''}
                   ${isSelected
                     ? 'scale-110 shadow-lg border-gold ring-2 ring-gold/50'
                     : 'hover:border-house-green/40 cursor-pointer'
                   }
                   ${!die.canMove ? 'opacity-50' : ''}
-                  ${!canRoll ? 'opacity-60 cursor-not-allowed' : ''}
+                  ${diceResult !== null ? 'opacity-60 cursor-not-allowed' : ''}
                 `}
                 title={!die.canMove ? 'D100 不可用于移动' : `${die.name} — 点击选择`}
               >
@@ -91,8 +92,16 @@ export const DiceRoller: React.FC<DiceRollerProps> = ({
                     ))}
                   </div>
                 )}
-                {!die.canMove && (
+                {die.shattered && (
+                  <span className="absolute -top-1 -right-1 text-[10px]">💔</span>
+                )}
+                {!die.canMove && !die.shattered && (
                   <span className="absolute -top-1 -right-1 text-[10px]">🚫</span>
+                )}
+                {die.wear > 0 && (
+                  <div className="w-full bg-gray-200 rounded-full h-0.5 mt-0.5">
+                    <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${die.wear}%` }} />
+                  </div>
                 )}
               </button>
             );

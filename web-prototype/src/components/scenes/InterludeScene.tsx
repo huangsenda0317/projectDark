@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../../stores/useGameStore';
 import { useBoardStore } from '../../stores/useBoardStore';
 import { EQUIPMENT_ITEMS } from '../../data/equipmentSets';
@@ -14,6 +14,15 @@ export const InterludeScene: React.FC = () => {
   const [selectedRelic, setSelectedRelic] = useState<Relic | null>(null);
   const [selectedDice, setSelectedDice] = useState<DiceEntity | null>(null);
   const [purified, setPurified] = useState(false);
+
+  // GDD v0.4.1: Auto wear recovery -2 per floor on entering interlude
+  useEffect(() => {
+    const updatedDice = game.diceBox.map(d => {
+      const newWear = Math.max(0, d.wear - 2);
+      return { ...d, wear: newWear, shattered: newWear < 100 ? false : d.shattered };
+    });
+    useGameStore.setState({ diceBox: updatedDice });
+  }, []);
 
   const equipRewards = React.useMemo(() => {
     const shuffled = [...EQUIPMENT_ITEMS].sort(() => Math.random() - 0.5);
@@ -55,16 +64,6 @@ export const InterludeScene: React.FC = () => {
     game.addGold(-5);
     game.addCurse(-Math.min(3, game.player.curseLevel));
     setPurified(true);
-  };
-
-  const handleContribute = () => {
-    const gold = Math.floor(game.player.gold * 0.3);
-    const faith = Math.floor(game.player.faith * 0.3);
-    game.addGold(-gold);
-    game.addFaith(-faith);
-    useGameStore.setState({
-      village: { ...game.village, faithReserve: game.village.faithReserve + faith },
-    });
   };
 
   const handleContinue = () => {
@@ -141,9 +140,9 @@ export const InterludeScene: React.FC = () => {
         <PixelButton variant="secondary" onClick={handlePurify} disabled={purified || game.player.gold < 5}>
           {purified ? '已净化' : '净化诅咒 (-5金)'}
         </PixelButton>
-        <PixelButton variant="gold" onClick={handleContribute}>
-          贡献村庄 (30%资源)
-        </PixelButton>
+        <div className="text-xs text-text-soft self-center">
+          📊 所有骰子磨损已自动 -2
+        </div>
       </div>
 
       <div className="flex justify-center gap-3">

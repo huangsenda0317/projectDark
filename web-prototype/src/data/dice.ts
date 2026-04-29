@@ -105,18 +105,41 @@ export function generateRandomDice(floor: number, forceQuality?: DiceQuality): D
     faces,
     affixes,
     canMove,
+    wear: 0,
+    shattered: false,
   };
 }
 
-/** Initial dice given to player at start of run */
-export const INITIAL_PLAYER_DICE: DiceEntity = {
+/** Initial dice given to player at start of run — GDD v0.4.1: D4 + D6 */
+export const INITIAL_PLAYER_D4: DiceEntity = {
+  id: 'dice_d4_white_init',
+  name: '普通小骰',
+  quality: 'common',
+  faces: 4,
+  affixes: [],
+  canMove: true,
+  wear: 0,
+  shattered: false,
+};
+
+export const INITIAL_PLAYER_D6: DiceEntity = {
   id: 'dice_d6_white_init',
   name: '普通方骰',
   quality: 'common',
   faces: 6,
   affixes: [{ id: 'step_mod', name: '步数修正', type: 'throw', effect: '投掷后点数 ±1（可选）', quality: 'common' }],
   canMove: true,
+  wear: 0,
+  shattered: false,
 };
+
+/** @deprecated Use INITIAL_PLAYER_D6 instead */
+export const INITIAL_PLAYER_DICE = INITIAL_PLAYER_D6;
+
+export const INITIAL_PLAYER_DICE_SET: DiceEntity[] = [
+  { ...INITIAL_PLAYER_D4 },
+  { ...INITIAL_PLAYER_D6 },
+];
 
 /** Fallback D4 die for empty dice box */
 export const FALLBACK_D4: DiceEntity = {
@@ -126,4 +149,6 @@ export const FALLBACK_D4: DiceEntity = {
   faces: 4,
   affixes: [],
   canMove: true,
+  wear: 0,
+  shattered: false,
 };

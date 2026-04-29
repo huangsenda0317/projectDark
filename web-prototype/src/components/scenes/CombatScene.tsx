@@ -26,13 +26,8 @@ export const CombatScene: React.FC = () => {
       setRewards(r);
       return;
     }
-    // Return embedded dice to dice box
-    for (const slot of combat.embeddedSlots) {
-      if (slot.embeddedDie) {
-        game.addDice(slot.embeddedDie);
-      }
-    }
-    combat.resetCombat();
+    // GDD v0.4.1: dice stay embedded after combat
+    combat.resetCombatSoft();
     setRewards(null);
     if (game.run.floor >= 10) {
       game.resetGame();
@@ -60,13 +55,8 @@ export const CombatScene: React.FC = () => {
     }
 
     setRewards(null);
-    // Return embedded dice
-    for (const slot of combat.embeddedSlots) {
-      if (slot.embeddedDie) {
-        game.addDice(slot.embeddedDie);
-      }
-    }
-    combat.resetCombat();
+    // GDD v0.4.1: dice stay embedded after combat
+    combat.resetCombatSoft();
     if (game.run.floor >= 10) {
       game.resetGame();
       game.setScene('board');
@@ -83,6 +73,7 @@ export const CombatScene: React.FC = () => {
 
   const isEmbedding = combat.phase === 'embedding';
   const isCombat = combat.phase === 'combat';
+  const [selectedEnemyIndex, setSelectedEnemyIndex] = useState(0);
 
   return (
     <div className="flex flex-col gap-3 p-4 max-w-4xl mx-auto">
@@ -91,8 +82,20 @@ export const CombatScene: React.FC = () => {
         <div className="text-sm font-semibold">
           {isEmbedding ? '🔮 骰子嵌入阶段' : isCombat ? '⚔️ 战斗中' : '⚔️ 战斗结束'}
         </div>
-        <div className="text-sm">
-          骰子匣: <span className="font-bold text-gold">{game.diceBox.length}/{game.maxDiceBoxSlots}</span>
+        <div className="flex items-center gap-3">
+          {isCombat && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs">⚡</span>
+              {Array.from({ length: combat.maxAP }, (_, i) => (
+                <span key={i} className={`text-sm ${i < combat.currentAP ? 'text-gold' : 'text-white/30'}`}>
+                  {i < combat.currentAP ? '◆' : '◇'}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="text-sm">
+            骰子匣: <span className="font-bold text-gold">{game.diceBox.length}/{game.maxDiceBoxSlots}</span>
+          </div>
         </div>
       </div>
 
@@ -125,7 +128,12 @@ export const CombatScene: React.FC = () => {
           return (
             <div
               key={`${enemy.id}-${idx}`}
-              className="bg-ceramic rounded-card p-3 border-2 border-house-green/30 w-36 flex flex-col items-center"
+              onClick={() => isCombat && setSelectedEnemyIndex(idx)}
+              className={`bg-ceramic rounded-card p-3 border-2 w-36 flex flex-col items-center ${
+                selectedEnemyIndex === idx && isCombat
+                  ? 'border-gold ring-2 ring-gold/50 scale-105'
+                  : 'border-house-green/30'
+              } ${isCombat ? 'cursor-pointer hover:border-house-green/50' : ''}`}
             >
               <div className="w-12 h-12 bg-house-green/10 rounded-lg flex items-center justify-center text-2xl border border-house-green/20 mb-1">
                 {enemy.sprite === 'goblin' && '👺'}
@@ -179,39 +187,61 @@ export const CombatScene: React.FC = () => {
       {/* Combat Phase Actions */}
       {isCombat && (
         <div className="bg-ceramic rounded-card p-3 border-2 border-gold/20">
-          <div className="text-sm font-bold text-house-green mb-3">
-            ⚡ 行动选择
+          {/* AP display */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="text-sm font-bold text-house-green">⚡ 行动选择</div>
+            <div className="flex items-center gap-1 text-xs">
+              <span className="text-text-soft">AP:</span>
+              {Array.from({ length: combat.maxAP }, (_, i) => (
+                <span key={i} className={`text-sm ${i < combat.currentAP ? 'text-gold' : 'text-gray-300'}`}>
+                  {i < combat.currentAP ? '◆' : '◇'}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Embedded dice summary */}
           <div className="flex gap-2 flex-wrap mb-3">
             {combat.embeddedSlots.filter(s => s.embeddedDie).map(slot => {
               const item = combat.equippedItems.find(e => e.slot === slot.equipmentSlotId);
+              const die = slot.embeddedDie!;
               return (
-                <div key={slot.equipmentSlotId} className="bg-house-green/5 px-2 py-1 rounded text-xs">
+                <div key={slot.equipmentSlotId} className={`bg-house-green/5 px-2 py-1 rounded text-xs ${die.shattered ? 'opacity-50' : ''}`}>
                   <span className="text-text-soft">{item?.name || slot.equipmentSlotId}: </span>
-                  <span className="font-bold text-gold font-mono">D{slot.embeddedDie!.faces}</span>
-                  <span className="text-text-soft"> {slot.embeddedDie!.name}</span>
+                  <span className="font-bold text-gold font-mono">D{die.faces}</span>
+                  <span className="text-text-soft"> {die.name}</span>
+                  {die.wear > 0 && (
+                    <div className="w-full bg-gray-200 rounded-full h-1 mt-0.5">
+                      <div className="h-full rounded-full bg-red-500 transition-all" style={{ width: `${die.wear}%` }} />
+                    </div>
+                  )}
+                  {die.shattered && <span className="text-[8px] text-red-500">💔 破裂</span>}
                 </div>
               );
             })}
           </div>
 
           <div className="flex gap-2 flex-wrap justify-center">
-            <PixelButton variant="primary" onClick={() => combat.playerAttack(0)}>
-              ⚔️ 攻击
+            <PixelButton variant="primary" onClick={() => combat.playerAttack(selectedEnemyIndex)}
+              disabled={combat.currentAP < 1}>
+              ⚔️ 攻击 (1AP)
             </PixelButton>
-            <PixelButton variant="secondary" onClick={combat.playerDefend}>
-              🛡️ 防御
+            <PixelButton variant="secondary" onClick={combat.playerDefend}
+              disabled={combat.currentAP < 1}>
+              🛡️ 防御 (1AP)
             </PixelButton>
-            <PixelButton variant="secondary" onClick={combat.playerSkill}>
-              ✨ 神判之刃
+            <PixelButton variant="secondary" onClick={combat.playerSkill}
+              disabled={combat.currentAP < 2}>
+              ✨ 神判之刃 (2AP)
             </PixelButton>
             <PixelButton variant="secondary" onClick={() => {
               const firstItem = game.items[0];
               if (firstItem) combat.playerUseItem(firstItem.id);
-            }}>
-              🧪 道具
+            }} disabled={combat.currentAP < 1}>
+              🧪 道具 (1AP)
+            </PixelButton>
+            <PixelButton variant="secondary" onClick={combat.endPlayerTurn}>
+              ⏳ 结束回合
             </PixelButton>
           </div>
         </div>

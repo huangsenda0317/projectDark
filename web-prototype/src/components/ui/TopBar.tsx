@@ -25,7 +25,7 @@ export const TopBar: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {barItem('✝️', '信仰', `${player.faith}/${player.maxFaith}`, '#cba258')}
+          {barItem('✝️', '信仰', player.faith, '#cba258')}
           {barItem('💰', '金币', player.gold, '#fbbf24')}
           {barItem('❤️', 'HP', `${player.hp}/${player.maxHp}`, player.hp < player.maxHp * 0.3 ? '#c82014' : '#22c55e')}
           {barItem('💀', '诅咒', player.curseLevel, player.curseLevel > 5 ? '#c82014' : undefined)}

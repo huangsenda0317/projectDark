@@ -69,9 +69,14 @@ interface BoardState {
   resetBoard: () => void;
 }
 
-/** GDD v0.3: cell count = 24 + floor * 2 */
+/** GDD v0.4.1: Tower-level based cell count */
+const CELL_COUNT_TABLE: Record<number, number> = {
+  1: 20, 2: 20, 3: 22, 4: 22, 5: 24,
+  6: 24, 7: 26, 8: 26, 9: 28, 10: 30,
+};
+
 function getCellCount(floor: number): number {
-  return 24 + floor * 2;
+  return CELL_COUNT_TABLE[floor] ?? (20 + Math.floor((floor - 1) / 2) * 2);
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
