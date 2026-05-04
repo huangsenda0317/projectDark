@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/items/consumable_data.gd" id="1_cdata"]
+
+[resource]
+script = ExtResource("1_cdata")
+item_id = "destiny_dice"
+item_name = "命运骰"
+description = "固定投掷为指定点数(1-6)"
+price = 8
+effect_type = "destiny_dice"
+effect_value = 0
+icon = "🎲"
+weight = 0.1

@@ -1,0 +1,101 @@
+{
+	"version": 1,
+	"description": "MVP random events (5 events per GDD_MVP scope).",
+	"events": [
+		{
+			"event_id": "wanderer_crossroads",
+			"event_name": "十字路口的流浪汉",
+			"narrative": "一个衣衫褴褛的流浪汉跪在路边，向你伸出颤抖的手。他的眼中闪烁着某种你无法忽视的光芒。",
+			"options": [
+				{
+					"text": "给他面包",
+					"costs": { "gold": -1 },
+					"rewards": { "faith": 2 },
+					"narrative_result": "他从你手中接过面包，低声道：'愿神明记得你的善意。' 你感到一丝温暖在胸口蔓延。"
+				},
+				{
+					"text": "无视他，继续赶路",
+					"costs": {},
+					"rewards": { "faith": -1 },
+					"narrative_result": "你避开他的目光，匆匆走过。身后传来一声轻叹。你的心中掠过一丝不安。"
+				}
+			]
+		},
+		{
+			"event_id": "heretical_pamphlet",
+			"event_name": "异端的小册子",
+			"narrative": "地上散落着几页羊皮纸，上面写满了对正统教会的质疑和批判。字迹潦草但充满力量。",
+			"options": [
+				{
+					"text": "焚毁这些亵渎之物",
+					"costs": {},
+					"rewards": { "faith": 3 },
+					"narrative_result": "火焰吞噬了那些文字，灰烬在空中旋转。你感到信仰更加坚定了。"
+				},
+				{
+					"text": "偷偷阅读",
+					"costs": { "faith": -2 },
+					"rewards": { "random_consumable": 1 },
+					"narrative_result": "你快速浏览了那些文字，有些观点让你不安，但其中隐藏的配方似乎很有用。"
+				}
+			]
+		},
+		{
+			"event_id": "collapsed_shrine",
+			"event_name": "倒塌的神坛",
+			"narrative": "一座古老的小神坛坍塌了一半，祭坛上的圣像已经模糊不清。它似乎在等待有人来修缮。",
+			"options": [
+				{
+					"text": "花费 20 金币修复它",
+					"costs": { "gold": -20 },
+					"rewards": { "faith": 4 },
+					"narrative_result": "你用随身工具清理了碎石，重新摆正了圣像。一道温暖的金光从头上的裂缝洒下。"
+				},
+				{
+					"text": "取走神坛上的遗物",
+					"costs": { "faith": -3 },
+					"rewards": { "random_relic": 1 },
+					"narrative_result": "你从神坛底部找到了一件古老的遗物。虽然有些愧疚，但这确实能帮到你。"
+				}
+			]
+		},
+		{
+			"event_id": "dying_knight",
+			"event_name": "临死的骑士",
+			"narrative": "一位身着重甲的老骑士靠在墙边，胸甲上有一道深深的裂痕。他虚弱地抬起头看着你。",
+			"options": [
+				{
+					"text": "付出 5 HP 救治他",
+					"costs": { "hp": -5 },
+					"rewards": { "random_equipment": 1 },
+					"narrative_result": "你撕下自己的衣襟为他包扎伤口。他摘下自己的护腕递给你：'拿着，我已经用不上了。'"
+				},
+				{
+					"text": "询问情报",
+					"costs": {},
+					"rewards": { "reveal_tiles": 3 },
+					"narrative_result": "他用尽最后的力气告诉你前方的危险所在。'小心那个审判官...他早已不是人了。'"
+				}
+			]
+		},
+		{
+			"event_id": "divine_whisper",
+			"event_name": "神明的低语",
+			"narrative": "一阵轻柔的低语在你耳边响起，像是从很远的地方传来，又像是来自内心深处。'你相信我吗？'",
+			"options": [
+				{
+					"text": "顺从",
+					"costs": {},
+					"rewards": { "random_blessing": 1 },
+					"narrative_result": "你闭上眼睛，让那声音引导你。一股温暖的力量流遍全身。"
+				},
+				{
+					"text": "质疑",
+					"costs": { "faith": -2 },
+					"rewards": { "gold": 15 },
+					"narrative_result": "'我不需要谁的指引。' 你回答道。低语消失了，但你的脚下出现了一小堆金币。"
+				}
+			]
+		}
+	]
+}

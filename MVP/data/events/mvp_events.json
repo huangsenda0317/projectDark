@@ -1,0 +1,11 @@
+{
+	"version": 1,
+	"description": "MVP events configuration — maps to assets/data/events.json for in-game loading.",
+	"event_ids": [
+		"wanderer_crossroads",
+		"heretical_pamphlet",
+		"collapsed_shrine",
+		"dying_knight",
+		"divine_whisper"
+	]
+}

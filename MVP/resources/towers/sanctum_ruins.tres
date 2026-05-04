@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="TowerData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/towers/tower_data.gd" id="1_towerdata"]
+
+[resource]
+script = ExtResource("1_towerdata")
+tower_id = "sanctum_ruins"
+tower_name = "圣堂废墟"
+tower_level = 1
+min_floors = 3
+max_floors = 6
+description = "一座被遗忘的古老圣堂，腐败审判官盘踞于此。信仰获取翻倍。"
+special_rules = "double_faith"

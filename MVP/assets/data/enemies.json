@@ -1,0 +1,72 @@
+{
+	"version": 1,
+	"description": "MVP enemy definitions for Sanctum Ruins (Lv.1 tower).",
+	"enemies": [
+		{
+			"enemy_id": "fallen_priest",
+			"enemy_name": "堕落修士",
+			"is_boss": false,
+			"max_hp": 25,
+			"armor": 2,
+			"attack_damage_min": 4,
+			"attack_damage_max": 7,
+			"crit_chance": 5,
+			"speed": 4,
+			"intent_weights": { "attack": 50, "defend": 30, "heavy_attack": 20 },
+			"exp_reward": 5,
+			"gold_min": 3,
+			"gold_max": 8,
+			"dice_drop_chance": 0.10
+		},
+		{
+			"enemy_id": "icon_guardian",
+			"enemy_name": "圣像守卫",
+			"is_boss": false,
+			"max_hp": 35,
+			"armor": 4,
+			"attack_damage_min": 5,
+			"attack_damage_max": 10,
+			"crit_chance": 3,
+			"speed": 3,
+			"intent_weights": { "attack": 40, "defend": 35, "heavy_attack": 25 },
+			"exp_reward": 8,
+			"gold_min": 5,
+			"gold_max": 12,
+			"dice_drop_chance": 0.15
+		},
+		{
+			"enemy_id": "corrupt_inquisitor",
+			"enemy_name": "腐败审判官",
+			"is_boss": true,
+			"max_hp": 120,
+			"armor": 5,
+			"attack_damage_min": 8,
+			"attack_damage_max": 12,
+			"crit_chance": 10,
+			"speed": 6,
+			"intent_weights": { "attack": 40, "defend": 20, "heavy_attack": 40 },
+			"exp_reward": 50,
+			"gold_min": 20,
+			"gold_max": 30,
+			"dice_drop_chance": 1.0,
+			"boss_phases": [
+				{
+					"phase_name": "Phase 1 — 审判",
+					"hp_threshold": 0.5,
+					"intent_weights": { "attack": 40, "defend": 25, "heavy_attack": 35 },
+					"bonus_armor": 3,
+					"special_effect": "curse_mark",
+					"special_value": 1
+				},
+				{
+					"phase_name": "Phase 2 — 信念崩塌",
+					"hp_threshold": 0.0,
+					"intent_weights": { "attack": 30, "defend": 20, "heavy_attack": 50 },
+					"bonus_armor": 5,
+					"special_effect": "faith_collapse",
+					"special_value": 2
+				}
+			]
+		}
+	]
+}

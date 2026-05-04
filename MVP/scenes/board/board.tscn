@@ -1,0 +1,559 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/board_hud.gd" id="1_board_hud"]
+[ext_resource type="Script" path="res://scripts/ui/dice_panel.gd" id="2_dice_panel"]
+[ext_resource type="Script" path="res://scripts/ui/board_controller.gd" id="3_board_controller"]
+[ext_resource type="Script" path="res://scripts/ui/move_dice_selector.gd" id="5_move_dice_selector"]
+[ext_resource type="Script" path="res://scripts/ui/shop_panel.gd" id="6_shop_panel"]
+[ext_resource type="Script" path="res://scripts/ui/event_panel.gd" id="7_event_panel"]
+[ext_resource type="Script" path="res://scripts/ui/treasure_panel.gd" id="8_treasure_panel"]
+[ext_resource type="Script" path="res://scripts/ui/attr_panel.gd" id="9_attr_panel"]
+[ext_resource type="Script" path="res://scripts/ui/backpack_panel.gd" id="10_backpack_panel"]
+
+[node name="Board" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="BoardHUD" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_board_hud")
+
+[node name="FloorLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 8.0
+offset_right = 200.0
+offset_bottom = 32.0
+text = "第 1 层"
+
+[node name="GoldLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 8.0
+offset_right = 250.0
+offset_bottom = 32.0
+text = "💰 0"
+
+[node name="FaithLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 8.0
+offset_right = 350.0
+offset_bottom = 32.0
+text = "✝ 10"
+
+[node name="HPBar" type="ProgressBar" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 8.0
+offset_right = 540.0
+offset_bottom = 30.0
+
+[node name="HPLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 550.0
+offset_top = 8.0
+offset_right = 680.0
+offset_bottom = 32.0
+text = "HP: 45/45"
+
+[node name="CurseLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 700.0
+offset_top = 8.0
+offset_right = 820.0
+offset_bottom = 32.0
+text = "💀 诅咒:0"
+
+[node name="WeightLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 36.0
+offset_right = 200.0
+offset_bottom = 60.0
+text = "⚖️ 0.0/16.0kg"
+
+[node name="DiceCountLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 830.0
+offset_top = 8.0
+offset_right = 950.0
+offset_bottom = 32.0
+text = "🎲 ×2"
+
+[node name="LevelLabel" type="Label" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 66.0
+offset_right = 120.0
+offset_bottom = 90.0
+text = "Lv.1"
+
+[node name="XPBar" type="ProgressBar" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 66.0
+offset_right = 250.0
+offset_bottom = 88.0
+
+[node name="DiceManageButton" type="Button" parent="BoardHUD"]
+layout_mode = 0
+offset_left = 830.0
+offset_top = 8.0
+offset_right = 960.0
+offset_bottom = 32.0
+text = "📦"
+
+[node name="BoardRing" type="Control" parent="."]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 100.0
+offset_right = 800.0
+offset_bottom = 620.0
+script = ExtResource("3_board_controller")
+
+[node name="MoveDiceSelector" type="Control" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 420.0
+offset_right = 168.0
+offset_bottom = 636.0
+script = ExtResource("5_move_dice_selector")
+
+[node name="MainDiceButton" type="Button" parent="MoveDiceSelector"]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 8.0
+offset_right = 124.0
+offset_bottom = 88.0
+text = "D4"
+
+[node name="DiceRing" type="Control" parent="MoveDiceSelector"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 96.0
+offset_right = 160.0
+offset_bottom = 210.0
+
+[node name="ResultLabel" type="Label" parent="MoveDiceSelector"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 216.0
+offset_right = 160.0
+offset_bottom = 240.0
+text = ""
+
+[node name="DirectionContainer" type="HBoxContainer" parent="MoveDiceSelector"]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 246.0
+offset_right = 160.0
+offset_bottom = 276.0
+
+[node name="CWButton" type="Button" parent="MoveDiceSelector/DirectionContainer"]
+layout_mode = 2
+text = "顺"
+
+[node name="CCWButton" type="Button" parent="MoveDiceSelector/DirectionContainer"]
+layout_mode = 2
+text = "逆"
+
+[node name="DicePanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("2_dice_panel")
+
+[node name="Background" type="ColorRect" parent="DicePanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="DicePanel"]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 40.0
+offset_right = 880.0
+offset_bottom = 680.0
+
+[node name="TitleLabel" type="Label" parent="DicePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 400.0
+offset_bottom = 40.0
+text = "骰子分配"
+
+[node name="FaithLabel" type="Label" parent="DicePanel/PanelBG"]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 12.0
+offset_right = 780.0
+offset_bottom = 40.0
+text = "信仰: ✝10"
+horizontal_alignment = 2
+
+[node name="ContentHBox" type="HBoxContainer" parent="DicePanel/PanelBG"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 48.0
+offset_right = 784.0
+offset_bottom = 560.0
+
+[node name="SlotSection" type="VBoxContainer" parent="DicePanel/PanelBG/ContentHBox"]
+layout_mode = 2
+
+[node name="SlotSectionTitle" type="Label" parent="DicePanel/PanelBG/ContentHBox/SlotSection"]
+layout_mode = 2
+text = "装备槽位"
+
+[node name="SlotGrid" type="GridContainer" parent="DicePanel/PanelBG/ContentHBox/SlotSection"]
+layout_mode = 2
+columns = 1
+
+[node name="DiceSection" type="VBoxContainer" parent="DicePanel/PanelBG/ContentHBox"]
+layout_mode = 2
+
+[node name="DiceSectionTitle" type="Label" parent="DicePanel/PanelBG/ContentHBox/DiceSection"]
+layout_mode = 2
+text = "自由骰子 (0/2)"
+
+[node name="DiceGrid" type="GridContainer" parent="DicePanel/PanelBG/ContentHBox/DiceSection"]
+layout_mode = 2
+columns = 1
+
+[node name="HintLabel" type="Label" parent="DicePanel/PanelBG"]
+layout_mode = 0
+offset_left = 16.0
+offset_top = 570.0
+offset_right = 784.0
+offset_bottom = 600.0
+text = "选择骰子 → 点击装备槽嵌入"
+
+[node name="CloseButton" type="Button" parent="DicePanel/PanelBG"]
+layout_mode = 0
+offset_left = 700.0
+offset_top = 600.0
+offset_right = 780.0
+offset_bottom = 636.0
+text = "关闭"
+
+[node name="BackpackPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("10_backpack_panel")
+
+[node name="Background" type="ColorRect" parent="BackpackPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="BackpackPanel"]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 100.0
+offset_right = 800.0
+offset_bottom = 580.0
+
+[node name="TitleLabel" type="Label" parent="BackpackPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 400.0
+offset_bottom = 40.0
+text = "背包"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="BackpackPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 48.0
+offset_right = 620.0
+offset_bottom = 420.0
+
+[node name="ItemContainer" type="VBoxContainer" parent="BackpackPanel/PanelBG/ScrollContainer"]
+layout_mode = 2
+
+[node name="DetailLabel" type="Label" parent="BackpackPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 428.0
+offset_right = 620.0
+offset_bottom = 468.0
+text = ""
+
+[node name="UseButton" type="Button" parent="BackpackPanel/PanelBG"]
+layout_mode = 0
+offset_left = 470.0
+offset_top = 480.0
+offset_right = 545.0
+offset_bottom = 512.0
+text = "使用"
+
+[node name="CloseButton" type="Button" parent="BackpackPanel/PanelBG"]
+layout_mode = 0
+offset_left = 555.0
+offset_top = 480.0
+offset_right = 620.0
+offset_bottom = 512.0
+text = "关闭"
+
+[node name="BackpackButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 700.0
+offset_top = 36.0
+offset_right = 800.0
+offset_bottom = 60.0
+text = "🎒 背包"
+
+[node name="ShopPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("6_shop_panel")
+
+[node name="Background" type="ColorRect" parent="ShopPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="ShopPanel"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 60.0
+offset_right = 840.0
+offset_bottom = 580.0
+
+[node name="TitleLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 300.0
+offset_bottom = 40.0
+text = "商店"
+
+[node name="GoldLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 12.0
+offset_right = 700.0
+offset_bottom = 40.0
+text = "💰 0"
+
+[node name="ItemContainer" type="VBoxContainer" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 48.0
+offset_right = 700.0
+offset_bottom = 440.0
+
+[node name="HintLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 452.0
+offset_right = 700.0
+offset_bottom = 480.0
+text = ""
+
+[node name="CloseButton" type="Button" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 492.0
+offset_right = 700.0
+offset_bottom = 524.0
+text = "关闭"
+
+[node name="EventPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("7_event_panel")
+
+[node name="Background" type="ColorRect" parent="EventPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="EventPanel"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 80.0
+offset_right = 840.0
+offset_bottom = 560.0
+
+[node name="TitleLabel" type="Label" parent="EventPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 700.0
+offset_bottom = 40.0
+text = "事件"
+horizontal_alignment = 1
+
+[node name="NarrativeLabel" type="Label" parent="EventPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 48.0
+offset_right = 700.0
+offset_bottom = 200.0
+text = ""
+autowrap_mode = 3
+
+[node name="OptionsContainer" type="HBoxContainer" parent="EventPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 216.0
+offset_right = 700.0
+offset_bottom = 286.0
+
+[node name="ResultLabel" type="Label" parent="EventPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 296.0
+offset_right = 700.0
+offset_bottom = 420.0
+text = ""
+autowrap_mode = 3
+
+[node name="ContinueButton" type="Button" parent="EventPanel/PanelBG"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 436.0
+offset_right = 420.0
+offset_bottom = 472.0
+text = "继续"
+
+[node name="TreasurePanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("8_treasure_panel")
+
+
+[node name="Background" type="ColorRect" parent="TreasurePanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="TreasurePanel"]
+layout_mode = 0
+offset_left = 160.0
+offset_top = 140.0
+offset_right = 800.0
+offset_bottom = 500.0
+
+[node name="TitleLabel" type="Label" parent="TreasurePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 620.0
+offset_bottom = 40.0
+text = "发现宝藏!"
+horizontal_alignment = 1
+
+[node name="OptionsContainer" type="HBoxContainer" parent="TreasurePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 52.0
+offset_right = 620.0
+offset_bottom = 260.0
+
+[node name="ResultLabel" type="Label" parent="TreasurePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 272.0
+offset_right = 620.0
+offset_bottom = 310.0
+text = ""
+horizontal_alignment = 1
+
+[node name="ContinueButton" type="Button" parent="TreasurePanel/PanelBG"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 320.0
+offset_right = 360.0
+offset_bottom = 352.0
+text = "继续"
+
+[node name="CombatPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+
+[node name="AttrPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("9_attr_panel")
+
+[node name="Background" type="ColorRect" parent="AttrPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="AttrPanel"]
+layout_mode = 0
+offset_left = 200.0
+offset_top = 120.0
+offset_right = 760.0
+offset_bottom = 480.0
+
+[node name="TitleLabel" type="Label" parent="AttrPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 540.0
+offset_bottom = 40.0
+text = "升级! 属性分配"
+horizontal_alignment = 1
+
+[node name="PointsLabel" type="Label" parent="AttrPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 44.0
+offset_right = 540.0
+offset_bottom = 68.0
+text = "可用点数: 0"
+horizontal_alignment = 1
+
+[node name="AttrContainer" type="VBoxContainer" parent="AttrPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 76.0
+offset_right = 540.0
+offset_bottom = 300.0
+
+[node name="HintLabel" type="Label" parent="AttrPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 310.0
+offset_right = 540.0
+offset_bottom = 338.0
+text = ""
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="AttrPanel/PanelBG"]
+layout_mode = 0
+offset_left = 220.0
+offset_top = 348.0
+offset_right = 340.0
+offset_bottom = 384.0
+text = "关闭"
+
+[connection signal="pressed" from="BoardHUD/DiceManageButton" to="BoardRing" method="_on_dice_panel_toggle"]

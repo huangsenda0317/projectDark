@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/items/consumable_data.gd" id="1_cdata"]
+
+[resource]
+script = ExtResource("1_cdata")
+item_id = "d4_white_dice"
+item_name = "D4 白骰"
+description = "获得一个 D4 白色骰子"
+price = 10
+effect_type = "dice"
+effect_value = 4
+icon = "⬜"
+weight = 0.1

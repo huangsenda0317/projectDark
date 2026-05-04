@@ -1,0 +1,269 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/village_ui.gd" id="1_village_ui"]
+[ext_resource type="Script" path="res://scripts/ui/shop_panel.gd" id="2_shop_panel"]
+[ext_resource type="Script" path="res://scripts/ui/blacksmith_panel.gd" id="3_blacksmith_panel"]
+[ext_resource type="Script" path="res://scripts/ui/contribute_panel.gd" id="4_contribute_panel"]
+
+[node name="Village" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_village_ui")
+
+[node name="VillageNameLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 330.0
+offset_top = 20.0
+offset_right = 630.0
+offset_bottom = 56.0
+text = "我的家园"
+horizontal_alignment = 1
+
+[node name="VillageLevelLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 380.0
+offset_top = 60.0
+offset_right = 580.0
+offset_bottom = 84.0
+text = "等级: 村落 (Lv.1)"
+horizontal_alignment = 1
+
+[node name="ResourcesLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 90.0
+offset_right = 540.0
+offset_bottom = 114.0
+text = "资源: 0"
+horizontal_alignment = 1
+
+[node name="FaithLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 118.0
+offset_right = 560.0
+offset_bottom = 142.0
+text = "信仰储量: 0"
+horizontal_alignment = 1
+
+[node name="Buttons" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 400.0
+offset_top = 180.0
+offset_right = 560.0
+offset_bottom = 460.0
+theme_override_constants/separation = 10
+
+[node name="EnterTower" type="Button" parent="Buttons"]
+text = "出发进塔"
+
+[node name="Shop" type="Button" parent="Buttons"]
+text = "商店"
+
+[node name="Blacksmith" type="Button" parent="Buttons"]
+text = "铁匠铺"
+
+[node name="Contribute" type="Button" parent="Buttons"]
+text = "贡献资源"
+
+[node name="MapRoom" type="Button" parent="Buttons"]
+text = "查看世界地图"
+
+[node name="ShopPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("2_shop_panel")
+
+[node name="Background" type="ColorRect" parent="ShopPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="ShopPanel"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 60.0
+offset_right = 840.0
+offset_bottom = 580.0
+
+[node name="TitleLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 300.0
+offset_bottom = 40.0
+text = "商店"
+
+[node name="GoldLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 12.0
+offset_right = 700.0
+offset_bottom = 40.0
+text = "💰 0"
+
+[node name="ItemContainer" type="VBoxContainer" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 48.0
+offset_right = 700.0
+offset_bottom = 440.0
+
+[node name="HintLabel" type="Label" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 452.0
+offset_right = 700.0
+offset_bottom = 480.0
+text = ""
+
+[node name="CloseButton" type="Button" parent="ShopPanel/PanelBG"]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 492.0
+offset_right = 700.0
+offset_bottom = 524.0
+text = "关闭"
+
+[node name="BlacksmithPanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("3_blacksmith_panel")
+
+[node name="Background" type="ColorRect" parent="BlacksmithPanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="BlacksmithPanel"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 80.0
+offset_right = 840.0
+offset_bottom = 560.0
+
+[node name="TitleLabel" type="Label" parent="BlacksmithPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 300.0
+offset_bottom = 40.0
+text = "铁匠铺"
+
+[node name="GoldLabel" type="Label" parent="BlacksmithPanel/PanelBG"]
+layout_mode = 0
+offset_left = 600.0
+offset_top = 12.0
+offset_right = 700.0
+offset_bottom = 40.0
+text = "💰 0"
+
+[node name="DiceContainer" type="VBoxContainer" parent="BlacksmithPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 48.0
+offset_right = 700.0
+offset_bottom = 400.0
+
+[node name="HintLabel" type="Label" parent="BlacksmithPanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 412.0
+offset_right = 700.0
+offset_bottom = 440.0
+text = ""
+
+[node name="CloseButton" type="Button" parent="BlacksmithPanel/PanelBG"]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 452.0
+offset_right = 700.0
+offset_bottom = 484.0
+text = "关闭"
+
+[node name="ContributePanel" type="Control" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("4_contribute_panel")
+
+[node name="Background" type="ColorRect" parent="ContributePanel"]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+
+[node name="PanelBG" type="Panel" parent="ContributePanel"]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 160.0
+offset_right = 660.0
+offset_bottom = 480.0
+
+[node name="TitleLabel" type="Label" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 12.0
+offset_right = 340.0
+offset_bottom = 40.0
+text = "贡献资源"
+horizontal_alignment = 1
+
+[node name="ResourcesLabel" type="Label" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 52.0
+offset_right = 340.0
+offset_bottom = 76.0
+text = "资源进度: 0/50"
+horizontal_alignment = 1
+
+[node name="FaithLabel" type="Label" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 84.0
+offset_right = 340.0
+offset_bottom = 108.0
+text = "信仰储量: ✝ 0 (需20升级)"
+horizontal_alignment = 1
+
+[node name="GoldInput" type="LineEdit" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 120.0
+offset_right = 340.0
+offset_bottom = 148.0
+placeholder_text = "输入金币数量"
+
+[node name="ContributeButton" type="Button" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 160.0
+offset_right = 240.0
+offset_bottom = 192.0
+text = "贡献"
+
+[node name="HintLabel" type="Label" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 204.0
+offset_right = 340.0
+offset_bottom = 228.0
+text = ""
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="ContributePanel/PanelBG"]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 240.0
+offset_right = 230.0
+offset_bottom = 272.0
+text = "关闭"

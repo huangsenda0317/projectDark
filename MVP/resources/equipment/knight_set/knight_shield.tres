@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="1_eqdata"]
+
+[resource]
+script = ExtResource("1_eqdata")
+item_id = "knight_shield"
+item_name = "骑士盾牌"
+slot_type = "offhand"
+quality = "blue"
+weight = 3.0
+base_block = 3
+set_name = "knight"
+set_piece = "shield"

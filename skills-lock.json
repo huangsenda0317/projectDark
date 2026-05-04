@@ -5,6 +5,12 @@
       "source": "MeowjitoAI/meowa-skills",
       "sourceType": "github",
       "computedHash": "b2ff93cc4a1d3f671801ba215ee185e551c1cb90c76cef88f7c8b9a2e069cf33"
+    },
+    "skill-repo": {
+      "source": "netresearch/skill-repo-skill",
+      "sourceType": "github",
+      "skillPath": "skills/skill-repo/SKILL.md",
+      "computedHash": "07f85f5aedfadf17a75067cb3acf0e500b18c98a745426e2faf1978983f611d3"
     }
   }
 }

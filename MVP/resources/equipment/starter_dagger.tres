@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="1_eqdata"]
+
+[resource]
+script = ExtResource("1_eqdata")
+item_id = "starter_dagger"
+item_name = "破旧匕首"
+slot_type = "weapon"
+quality = "white"
+weight = 1.0
+base_damage_min = 3
+base_damage_max = 6
+base_crit_rate = 5.0
+base_fluctuation = 1
+dice_count = 1
+base_armor = 0
+base_block = 0
+set_name = ""
+set_piece = ""

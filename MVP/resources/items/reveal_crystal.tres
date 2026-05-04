@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/items/consumable_data.gd" id="1_cdata"]
+
+[resource]
+script = ExtResource("1_cdata")
+item_id = "reveal_crystal"
+item_name = "透视水晶"
+description = "揭示前方 3 格类型"
+price = 15
+effect_type = "reveal"
+effect_value = 3
+icon = "🔮"
+weight = 0.1

@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/items/consumable_data.gd" id="1_cdata"]
+
+[resource]
+script = ExtResource("1_cdata")
+item_id = "guide_lantern"
+item_name = "指路灯笼"
+description = "揭示本层上楼格位置"
+price = 20
+effect_type = "lantern"
+effect_value = 0
+icon = "🏮"
+weight = 0.2

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "godot": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [".claude/hooks/start-mcp.sh"]
+    }
+  }
+}

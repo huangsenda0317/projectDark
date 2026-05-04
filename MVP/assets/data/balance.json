@@ -1,0 +1,80 @@
+{
+	"version": 1,
+	"description": "MVP balance parameters — all numeric tuning knobs live here.",
+	"player": {
+		"initial_hp": 45,
+		"hp_per_con": 5,
+		"initial_strength": 3,
+		"initial_agility": 3,
+		"initial_intelligence": 3,
+		"initial_constitution": 3,
+		"initial_faith_attr": 3,
+		"base_weight_limit": 10,
+		"weight_per_str": 2,
+		"initial_faith": 10,
+		"initial_dice_capacity": 2,
+		"max_dice_capacity_mvp": 4,
+		"initial_backpack_capacity": 6,
+		"max_relics": 6
+	},
+	"combat": {
+		"base_ap": 3,
+		"ap_per_5_agi": 1,
+		"str_per_damage": 5,
+		"agi_per_crit": 10,
+		"agi_per_ap": 5,
+		"crit_multiplier": 1.5,
+		"wear_per_action": 1,
+		"wear_recovery_per_floor": 2,
+		"wear_penalty_50": -1,
+		"wear_penalty_75": -2
+	},
+	"dice": {
+		"embed_cost_ratio": 3,
+		"d20_movement_halved": true,
+		"d100_cannot_move": true
+	},
+	"weight": {
+		"light_threshold": 0.5,
+		"normal_threshold": 0.8,
+		"heavy_threshold": 1.0,
+		"light_dodge_bonus": 10,
+		"light_step_bonus": 1,
+		"heavy_initiative_penalty": -20,
+		"overloaded_fatigue_damage": 2,
+		"overloaded_damage_mult": 0.70
+	},
+	"leveling": {
+		"exp_table": [0, 20, 50, 100, 180, 300, 500, 800, 1200, 1800, 2500],
+		"attribute_points_per_level": 2,
+		"hp_per_level_base": 5,
+		"hp_per_level_after_3": 8
+	},
+	"death": {
+		"gold_loss_percent": 0.30,
+		"faith_loss_percent": 0.30,
+		"equipment_drop_chance": 0.15,
+		"revive_hp_percent": 0.50,
+		"revive_faith_min": 5,
+		"max_consecutive_death_protection": 2
+	},
+	"curse": {
+		"tier_1_threshold": 0,
+		"tier_2_threshold": 3,
+		"tier_3_threshold": 6,
+		"tier_4_threshold": 9,
+		"tier_5_threshold": 12,
+		"tier_2_hp_bonus": 0.10,
+		"tier_3_shop_mult": 1.5,
+		"tier_4_random_move": true,
+		"tier_5_negative_events": true
+	},
+	"village": {
+		"level_2_resources": 50,
+		"level_2_faith": 20,
+		"level_3_resources": 200,
+		"level_3_faith": 80,
+		"level_4_resources": 600,
+		"level_4_faith": 200
+	}
+}

@@ -1,0 +1,146 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/systems/combat_manager.gd" id="1_combat_manager"]
+[ext_resource type="Script" path="res://scripts/ui/combat_hud.gd" id="2_combat_hud"]
+
+[node name="Combat" type="Control"]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_combat_manager")
+
+[node name="CombatHUD" type="Control" parent="."]
+layout_mode = 3
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("2_combat_hud")
+
+[node name="PlayerPanel" type="Panel" parent="CombatHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 560.0
+offset_right = 300.0
+offset_bottom = 700.0
+
+[node name="HPBar" type="ProgressBar" parent="CombatHUD/PlayerPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 30.0
+
+[node name="HPLabel" type="Label" parent="CombatHUD/PlayerPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 35.0
+offset_right = 270.0
+offset_bottom = 55.0
+text = "HP: 45/45"
+
+[node name="EnemyPanel" type="Panel" parent="CombatHUD"]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 80.0
+offset_right = 620.0
+offset_bottom = 280.0
+
+[node name="NameLabel" type="Label" parent="CombatHUD/EnemyPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 270.0
+offset_bottom = 35.0
+text = "???"
+
+[node name="HPBar" type="ProgressBar" parent="CombatHUD/EnemyPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 45.0
+offset_right = 270.0
+offset_bottom = 65.0
+
+[node name="HPLabel" type="Label" parent="CombatHUD/EnemyPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 70.0
+offset_right = 270.0
+offset_bottom = 90.0
+text = "HP: 100/100"
+
+[node name="IntentLabel" type="Label" parent="CombatHUD/EnemyPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 100.0
+offset_right = 270.0
+offset_bottom = 130.0
+text = "意图：..."
+
+[node name="ActionPanel" type="Panel" parent="CombatHUD"]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 560.0
+offset_right = 940.0
+offset_bottom = 700.0
+
+[node name="APBar" type="ProgressBar" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 200.0
+offset_bottom = 30.0
+
+[node name="APLabel" type="Label" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 210.0
+offset_top = 10.0
+offset_right = 280.0
+offset_bottom = 30.0
+text = "AP: 3/3"
+
+[node name="AttackButton" type="Button" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = 120.0
+offset_bottom = 72.0
+text = "攻击 (1AP)"
+
+[node name="DefendButton" type="Button" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 130.0
+offset_top = 40.0
+offset_right = 240.0
+offset_bottom = 72.0
+text = "防御 (1AP)"
+
+[node name="SkillButton" type="Button" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 40.0
+offset_right = 360.0
+offset_bottom = 72.0
+text = "技能 (2AP)"
+
+[node name="ItemButton" type="Button" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 370.0
+offset_top = 40.0
+offset_right = 480.0
+offset_bottom = 72.0
+text = "道具 (1AP)"
+
+[node name="FleeButton" type="Button" parent="CombatHUD/ActionPanel"]
+layout_mode = 0
+offset_left = 490.0
+offset_top = 40.0
+offset_right = 600.0
+offset_bottom = 72.0
+text = "逃跑 (2AP)"
+
+[node name="LogLabel" type="Label" parent="CombatHUD"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 320.0
+offset_bottom = 300.0
+text = ""

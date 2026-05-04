@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="1_eqdata"]
+
+[resource]
+script = ExtResource("1_eqdata")
+item_id = "knight_hammer"
+item_name = "骑士重锤"
+slot_type = "weapon"
+quality = "blue"
+weight = 5.0
+base_damage_min = 12
+base_damage_max = 18
+base_crit_rate = 8.0
+base_fluctuation = 3
+dice_count = 2
+base_armor = 0
+base_block = 0
+set_name = "knight"
+set_piece = "hammer"

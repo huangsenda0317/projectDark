@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ConsumableData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/items/consumable_data.gd" id="1_cdata"]
+
+[resource]
+script = ExtResource("1_cdata")
+item_id = "healing_potion"
+item_name = "治愈药水"
+description = "恢复 20 HP"
+price = 10
+effect_type = "heal"
+effect_value = 20
+icon = "🧪"
+weight = 0.2

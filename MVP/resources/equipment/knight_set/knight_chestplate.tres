@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="EquipmentData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://resources/equipment/equipment_data.gd" id="1_eqdata"]
+
+[resource]
+script = ExtResource("1_eqdata")
+item_id = "knight_chestplate"
+item_name = "骑士胸甲"
+slot_type = "chestplate"
+quality = "blue"
+weight = 6.0
+base_armor = 3
+bonus_str = 1
+set_name = "knight"
+set_piece = "chestplate"

@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/tile_component.gd" id="1_tile_component"]
+
+[node name="Tile" type="Control" node_paths=PackedStringArray("icon", "highlight", "button")]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_tile_component")
+
+[node name="Icon" type="Label" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = "·"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Highlight" type="ColorRect" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+color = Color(1, 1, 0, 0.3)
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 1
+anchor_right = 1.0
+anchor_bottom = 1.0
+flat = true

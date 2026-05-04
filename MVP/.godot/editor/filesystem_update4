@@ -1,0 +1,8 @@
+res://scenes/combat/combat.tscn
+res://scripts/systems/combat_engine.gd
+res://scripts/systems/combat_manager.gd
+res://scripts/ui/combat_hud.gd
+res://scripts/autoloads/event_bus.gd
+res://scripts/ui/board_hud.gd
+res://scripts/ui/main_menu.gd
+res://scripts/ui/backpack_panel.gd
