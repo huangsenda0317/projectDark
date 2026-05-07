@@ -1,5 +1,7 @@
 # Agent Roster
 
+> **Status**: 38/38 active agents installed (10 engine-specialist slots reserved for Unity and Unreal — not applicable to this Godot project)
+
 ## Tier 1 — Directors
 
 | Agent | Domain | Model |
@@ -78,8 +80,10 @@
 
 ## Engine Specialists
 
-| Engine | Agent | Sub-Specialists |
-|--------|-------|-----------------|
-| Godot 4 | godot-specialist | gdscript-specialist, shader-specialist, gdextension-specialist |
-| Unity | unity-specialist | dots-specialist, shader-vfx-specialist, addressables-specialist, ui-toolkit-specialist |
-| Unreal Engine 5 | unreal-specialist | gas-specialist, blueprint-specialist, replication-specialist, umq-commonui-specialist |
+| Engine | Agent | Sub-Specialists | Status |
+|--------|-------|-----------------|--------|
+| Godot 4 | godot-specialist | gdscript-specialist, shader-specialist, gdextension-specialist | 4/4 installed |
+| Unity | unity-specialist | dots-specialist, shader-vfx-specialist, addressables-specialist, ui-toolkit-specialist | Reserved |
+| Unreal Engine 5 | unreal-specialist | gas-specialist, blueprint-specialist, replication-specialist, umq-commonui-specialist | Reserved |
+
+> Unity and Unreal agents are reserved for multi-engine projects and are not installed.

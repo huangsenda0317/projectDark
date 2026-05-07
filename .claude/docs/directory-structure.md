@@ -11,7 +11,7 @@ projectDark/
 ├── .claude/                         # Claude Code Game Studios framework
 │   ├── settings.json                # Hooks, permissions, safety rules
 │   ├── statusline.sh                # Terminal status line script
-│   ├── agents/                      # 48 agent definitions
+│   ├── agents/                      # 38 agent definitions
 │   ├── skills/                      # 37 slash command definitions
 │   ├── hooks/                       # 8 automation scripts
 │   ├── rules/                       # 11 path-scoped coding standards

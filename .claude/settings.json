@@ -1,7 +1,9 @@
 {
   "enableAllProjectMcpServers": true,
+  "permissionMode": "acceptEdits",
   "permissions": {
     "allow": [
+      "Read", "Write", "Edit", "Glob", "Grep",
       "Bash(git status)",
       "Bash(git log *)",
       "Bash(git diff *)",

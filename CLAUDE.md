@@ -1,6 +1,6 @@
 # Claude Code Game Studios -- Game Studio Agent Architecture
 
-Indie game development managed through 48 coordinated Claude Code subagents.
+Indie game development managed through 38 coordinated Claude Code subagents (48-arch minus 10 Unity/Unreal reserved slots).
 Each agent owns a specific domain, enforcing separation of concerns and quality.
 
 ## Technology Stack
